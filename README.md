@@ -1,40 +1,29 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Tech Services Manager
 
-## Getting Started
+_By Sean Driscoll_
 
-First, run the development server:
+### Project Goals
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+The end goal of this project is to create a responsive, user-friendly, and customizable web app that serves as a
+managment dashboard for customer-facing tech service workers. Some of the main focuses of the user interface
+will be flaws I found with software I have used in the past, such as an excessively long and complicated intake
+process and extremely lackluster organization options. Noboby wants to sit there waiting awkwardly while the
+tech worker clicks through fifty unskippable check boxes that don't matter, and everybody loves a well organized
+dashboard. Especially when multiple different people are using it and need to quickly assess what is going on.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Tech
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+I plan to use the following technologies throughout this project, but will update the final documentation
+accordingly if anything changes:
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
-
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
-
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+- **_React_**
+- **_Next.js_**
+- **_Node.js_**
+- **_AWS: Amplify, S3, GraphQL API, (maybe more)_**
+- **_Tailwind CSS_**
+- **_JavaScript/TypeScript_**
+- **_HTML_**
+- **_Figma_**
+- **_ESLint_**
+- **_Visual Studio Code_**
+- **_GitHub_**

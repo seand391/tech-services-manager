@@ -1,0 +1,23 @@
+{
+  "staging": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-techservicesmanager-staging-32231-authRole",
+      "UnauthRoleArn": "arn:aws:iam::416868201831:role/amplify-techservicesmanager-staging-32231-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::416868201831:role/amplify-techservicesmanager-staging-32231-authRole",
+      "Region": "us-east-2",
+      "DeploymentBucketName": "amplify-techservicesmanager-staging-32231-deployment",
+      "UnauthRoleName": "amplify-techservicesmanager-staging-32231-unauthRole",
+      "StackName": "amplify-techservicesmanager-staging-32231",
+      "StackId": "arn:aws:cloudformation:us-east-2:416868201831:stack/amplify-techservicesmanager-staging-32231/442ab500-58f7-11ee-806b-0a77db78ff0d",
+      "AmplifyAppId": "d3t1f39v7ga0ax"
+    },
+    "categories": {
+      "auth": {
+        "TechServicesManager": {}
+      },
+      "storage": {
+        "s3techservicesmanagerstorage": {}
+      }
+    }
+  }
+}

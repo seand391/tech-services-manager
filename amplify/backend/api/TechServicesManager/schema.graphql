@@ -1,0 +1,29 @@
+type Customer @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  first: String!
+  last: String!
+  phone: AWSPhone!
+  email: AWSEmail
+  Orders: [Order] @hasMany(indexName: "byCustomer", fields: ["id"])
+  Devices: [Device] @hasMany(indexName: "byCustomer", fields: ["id"])
+}
+
+type Device @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  type: String!
+  brand: String
+  password: String
+  serialNumber: String
+  customerID: ID! @index(name: "byCustomer")
+  Orders: [Order] @hasMany(indexName: "byDevice", fields: ["id"])
+}
+
+type Order @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  orderNumber: String!
+  intakeDate: AWSDateTime!
+  status: String
+  completed: Boolean!
+  customerID: ID! @index(name: "byCustomer")
+  deviceID: ID! @index(name: "byDevice")
+} 
