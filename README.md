@@ -27,3 +27,6 @@ accordingly if anything changes:
 - **_ESLint_**
 - **_Visual Studio Code_**
 - **_GitHub_**
+
+## Initial planning with Figma
+![image](./images/figma1.JPG)
