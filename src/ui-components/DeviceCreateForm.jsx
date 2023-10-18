@@ -22,7 +22,7 @@ import {
 import { getOverrideProps } from "@aws-amplify/ui-react/internal";
 import { fetchByPath, validateField } from "./utils";
 import { API } from "aws-amplify";
-import { listCustomers, listOrders } from "../graphql/queries";
+import { listOrders } from "../graphql/queries";
 import { createDevice, updateOrder } from "../graphql/mutations";
 function ArrayField({
   items = [],
@@ -195,7 +195,7 @@ export default function DeviceCreateForm(props) {
     brand: "",
     password: "",
     serialNumber: "",
-    customerID: undefined,
+    customerID: "",
     Orders: [],
   };
   const [type, setType] = React.useState(initialValues.type);
@@ -205,10 +205,6 @@ export default function DeviceCreateForm(props) {
     initialValues.serialNumber
   );
   const [customerID, setCustomerID] = React.useState(initialValues.customerID);
-  const [customerIDLoading, setCustomerIDLoading] = React.useState(false);
-  const [customerIDRecords, setCustomerIDRecords] = React.useState([]);
-  const [selectedCustomerIDRecords, setSelectedCustomerIDRecords] =
-    React.useState([]);
   const [Orders, setOrders] = React.useState(initialValues.Orders);
   const [OrdersLoading, setOrdersLoading] = React.useState(false);
   const [OrdersRecords, setOrdersRecords] = React.useState([]);
@@ -220,18 +216,11 @@ export default function DeviceCreateForm(props) {
     setPassword(initialValues.password);
     setSerialNumber(initialValues.serialNumber);
     setCustomerID(initialValues.customerID);
-    setCurrentCustomerIDValue(undefined);
-    setCurrentCustomerIDDisplayValue("");
     setOrders(initialValues.Orders);
     setCurrentOrdersValue(undefined);
     setCurrentOrdersDisplayValue("");
     setErrors({});
   };
-  const [currentCustomerIDDisplayValue, setCurrentCustomerIDDisplayValue] =
-    React.useState("");
-  const [currentCustomerIDValue, setCurrentCustomerIDValue] =
-    React.useState(undefined);
-  const customerIDRef = React.createRef();
   const [currentOrdersDisplayValue, setCurrentOrdersDisplayValue] =
     React.useState("");
   const [currentOrdersValue, setCurrentOrdersValue] = React.useState(undefined);
@@ -245,7 +234,6 @@ export default function DeviceCreateForm(props) {
       : getIDValue.Orders?.(Orders)
   );
   const getDisplayValue = {
-    customerID: (r) => `${r?.first ? r?.first + " - " : ""}${r?.id}`,
     Orders: (r) => `${r?.orderNumber ? r?.orderNumber + " - " : ""}${r?.id}`,
   };
   const validations = {
@@ -272,33 +260,6 @@ export default function DeviceCreateForm(props) {
     }
     setErrors((errors) => ({ ...errors, [fieldName]: validationResponse }));
     return validationResponse;
-  };
-  const fetchCustomerIDRecords = async (value) => {
-    setCustomerIDLoading(true);
-    const newOptions = [];
-    let newNext = "";
-    while (newOptions.length < autocompleteLength && newNext != null) {
-      const variables = {
-        limit: autocompleteLength * 5,
-        filter: {
-          or: [{ first: { contains: value } }, { id: { contains: value } }],
-        },
-      };
-      if (newNext) {
-        variables["nextToken"] = newNext;
-      }
-      const result = (
-        await API.graphql({
-          query: listCustomers,
-          variables,
-        })
-      )?.data?.listCustomers?.items;
-      var loaded = result.filter((item) => customerID !== item.id);
-      newOptions.push(...loaded);
-      newNext = result.nextToken;
-    }
-    setCustomerIDRecords(newOptions.slice(0, autocompleteLength));
-    setCustomerIDLoading(false);
   };
   const fetchOrdersRecords = async (value) => {
     setOrdersLoading(true);
@@ -333,7 +294,6 @@ export default function DeviceCreateForm(props) {
     setOrdersLoading(false);
   };
   React.useEffect(() => {
-    fetchCustomerIDRecords("");
     fetchOrdersRecords("");
   }, []);
   return (
@@ -555,10 +515,13 @@ export default function DeviceCreateForm(props) {
         hasError={errors.serialNumber?.hasError}
         {...getOverrideProps(overrides, "serialNumber")}
       ></TextField>
-      <ArrayField
-        lengthLimit={1}
-        onChange={async (items) => {
-          let value = items[0];
+      <TextField
+        label="Customer id"
+        isRequired={true}
+        isReadOnly={false}
+        value={customerID}
+        onChange={(e) => {
+          let { value } = e.target;
           if (onChange) {
             const modelFields = {
               type,
@@ -571,86 +534,16 @@ export default function DeviceCreateForm(props) {
             const result = onChange(modelFields);
             value = result?.customerID ?? value;
           }
+          if (errors.customerID?.hasError) {
+            runValidationTasks("customerID", value);
+          }
           setCustomerID(value);
-          setCurrentCustomerIDValue(undefined);
         }}
-        currentFieldValue={currentCustomerIDValue}
-        label={"Customer id"}
-        items={customerID ? [customerID] : []}
-        hasError={errors?.customerID?.hasError}
-        runValidationTasks={async () =>
-          await runValidationTasks("customerID", currentCustomerIDValue)
-        }
-        errorMessage={errors?.customerID?.errorMessage}
-        getBadgeText={(value) =>
-          value
-            ? getDisplayValue.customerID(
-                customerIDRecords.find((r) => r.id === value) ??
-                  selectedCustomerIDRecords.find((r) => r.id === value)
-              )
-            : ""
-        }
-        setFieldValue={(value) => {
-          setCurrentCustomerIDDisplayValue(
-            value
-              ? getDisplayValue.customerID(
-                  customerIDRecords.find((r) => r.id === value) ??
-                    selectedCustomerIDRecords.find((r) => r.id === value)
-                )
-              : ""
-          );
-          setCurrentCustomerIDValue(value);
-          const selectedRecord = customerIDRecords.find((r) => r.id === value);
-          if (selectedRecord) {
-            setSelectedCustomerIDRecords([selectedRecord]);
-          }
-        }}
-        inputFieldRef={customerIDRef}
-        defaultFieldValue={""}
-      >
-        <Autocomplete
-          label="Customer id"
-          isRequired={true}
-          isReadOnly={false}
-          placeholder="Search Customer"
-          value={currentCustomerIDDisplayValue}
-          options={customerIDRecords
-            .filter(
-              (r, i, arr) =>
-                arr.findIndex((member) => member?.id === r?.id) === i
-            )
-            .map((r) => ({
-              id: r?.id,
-              label: getDisplayValue.customerID?.(r),
-            }))}
-          isLoading={customerIDLoading}
-          onSelect={({ id, label }) => {
-            setCurrentCustomerIDValue(id);
-            setCurrentCustomerIDDisplayValue(label);
-            runValidationTasks("customerID", label);
-          }}
-          onClear={() => {
-            setCurrentCustomerIDDisplayValue("");
-          }}
-          onChange={(e) => {
-            let { value } = e.target;
-            fetchCustomerIDRecords(value);
-            if (errors.customerID?.hasError) {
-              runValidationTasks("customerID", value);
-            }
-            setCurrentCustomerIDDisplayValue(value);
-            setCurrentCustomerIDValue(undefined);
-          }}
-          onBlur={() =>
-            runValidationTasks("customerID", currentCustomerIDValue)
-          }
-          errorMessage={errors.customerID?.errorMessage}
-          hasError={errors.customerID?.hasError}
-          ref={customerIDRef}
-          labelHidden={true}
-          {...getOverrideProps(overrides, "customerID")}
-        ></Autocomplete>
-      </ArrayField>
+        onBlur={() => runValidationTasks("customerID", customerID)}
+        errorMessage={errors.customerID?.errorMessage}
+        hasError={errors.customerID?.hasError}
+        {...getOverrideProps(overrides, "customerID")}
+      ></TextField>
       <ArrayField
         onChange={async (items) => {
           let values = items;

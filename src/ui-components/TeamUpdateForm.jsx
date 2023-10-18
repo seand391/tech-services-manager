@@ -16,14 +16,15 @@ import {
   Icon,
   ScrollView,
   Text,
+  TextAreaField,
   TextField,
   useTheme,
 } from "@aws-amplify/ui-react";
 import { getOverrideProps } from "@aws-amplify/ui-react/internal";
 import { fetchByPath, validateField } from "./utils";
 import { API } from "aws-amplify";
-import { getCustomer, listOrders } from "../graphql/queries";
-import { updateCustomer, updateOrder } from "../graphql/mutations";
+import { getTeam, listCustomers, listOrders } from "../graphql/queries";
+import { updateCustomer, updateOrder, updateTeam } from "../graphql/mutations";
 function ArrayField({
   items = [],
   onChange,
@@ -179,10 +180,10 @@ function ArrayField({
     </React.Fragment>
   );
 }
-export default function CustomerUpdateForm(props) {
+export default function TeamUpdateForm(props) {
   const {
     id: idProp,
-    customer: customerModelProp,
+    team: teamModelProp,
     onSuccess,
     onError,
     onSubmit,
@@ -192,112 +193,111 @@ export default function CustomerUpdateForm(props) {
     ...rest
   } = props;
   const initialValues = {
-    first: "",
-    last: "",
-    phone: "",
-    email: "",
+    owner: "",
+    Customers: [],
     Orders: [],
-    Devices: [],
-    teamID: "",
+    members: [],
+    settings: "",
   };
-  const [first, setFirst] = React.useState(initialValues.first);
-  const [last, setLast] = React.useState(initialValues.last);
-  const [phone, setPhone] = React.useState(initialValues.phone);
-  const [email, setEmail] = React.useState(initialValues.email);
+  const [owner, setOwner] = React.useState(initialValues.owner);
+  const [Customers, setCustomers] = React.useState(initialValues.Customers);
+  const [CustomersLoading, setCustomersLoading] = React.useState(false);
+  const [CustomersRecords, setCustomersRecords] = React.useState([]);
   const [Orders, setOrders] = React.useState(initialValues.Orders);
   const [OrdersLoading, setOrdersLoading] = React.useState(false);
   const [OrdersRecords, setOrdersRecords] = React.useState([]);
-  const [Devices, setDevices] = React.useState(initialValues.Devices);
-  const [DevicesLoading, setDevicesLoading] = React.useState(false);
-  const [DevicesRecords, setDevicesRecords] = React.useState([]);
-  const [teamID, setTeamID] = React.useState(initialValues.teamID);
+  const [members, setMembers] = React.useState(initialValues.members);
+  const [settings, setSettings] = React.useState(initialValues.settings);
   const autocompleteLength = 10;
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
-    const cleanValues = customerRecord
+    const cleanValues = teamRecord
       ? {
           ...initialValues,
-          ...customerRecord,
+          ...teamRecord,
+          Customers: linkedCustomers,
           Orders: linkedOrders,
-          Devices: linkedDevices,
         }
       : initialValues;
-    setFirst(cleanValues.first);
-    setLast(cleanValues.last);
-    setPhone(cleanValues.phone);
-    setEmail(cleanValues.email);
+    setOwner(cleanValues.owner);
+    setCustomers(cleanValues.Customers ?? []);
+    setCurrentCustomersValue(undefined);
+    setCurrentCustomersDisplayValue("");
     setOrders(cleanValues.Orders ?? []);
     setCurrentOrdersValue(undefined);
     setCurrentOrdersDisplayValue("");
-    setDevices(cleanValues.Devices ?? []);
-    setCurrentDevicesValue(undefined);
-    setCurrentDevicesDisplayValue("");
-    setTeamID(cleanValues.teamID);
+    setMembers(cleanValues.members ?? []);
+    setCurrentMembersValue("");
+    setSettings(
+      typeof cleanValues.settings === "string" || cleanValues.settings === null
+        ? cleanValues.settings
+        : JSON.stringify(cleanValues.settings)
+    );
     setErrors({});
   };
-  const [customerRecord, setCustomerRecord] = React.useState(customerModelProp);
+  const [teamRecord, setTeamRecord] = React.useState(teamModelProp);
+  const [linkedCustomers, setLinkedCustomers] = React.useState([]);
+  const canUnlinkCustomers = false;
   const [linkedOrders, setLinkedOrders] = React.useState([]);
   const canUnlinkOrders = false;
-  const [linkedDevices, setLinkedDevices] = React.useState([]);
-  const canUnlinkDevices = false;
   React.useEffect(() => {
     const queryData = async () => {
       const record = idProp
         ? (
             await API.graphql({
-              query: getCustomer,
+              query: getTeam,
               variables: { id: idProp },
             })
-          )?.data?.getCustomer
-        : customerModelProp;
+          )?.data?.getTeam
+        : teamModelProp;
+      const linkedCustomers = record?.Customers?.items ?? [];
+      setLinkedCustomers(linkedCustomers);
       const linkedOrders = record?.Orders?.items ?? [];
       setLinkedOrders(linkedOrders);
-      const linkedDevices = record?.Devices?.items ?? [];
-      setLinkedDevices(linkedDevices);
-      setCustomerRecord(record);
+      setTeamRecord(record);
     };
     queryData();
-  }, [idProp, customerModelProp]);
+  }, [idProp, teamModelProp]);
   React.useEffect(resetStateValues, [
-    customerRecord,
+    teamRecord,
+    linkedCustomers,
     linkedOrders,
-    linkedDevices,
   ]);
+  const [currentCustomersDisplayValue, setCurrentCustomersDisplayValue] =
+    React.useState("");
+  const [currentCustomersValue, setCurrentCustomersValue] =
+    React.useState(undefined);
+  const CustomersRef = React.createRef();
   const [currentOrdersDisplayValue, setCurrentOrdersDisplayValue] =
     React.useState("");
   const [currentOrdersValue, setCurrentOrdersValue] = React.useState(undefined);
   const OrdersRef = React.createRef();
-  const [currentDevicesDisplayValue, setCurrentDevicesDisplayValue] =
-    React.useState("");
-  const [currentDevicesValue, setCurrentDevicesValue] =
-    React.useState(undefined);
-  const DevicesRef = React.createRef();
+  const [currentMembersValue, setCurrentMembersValue] = React.useState("");
+  const membersRef = React.createRef();
   const getIDValue = {
+    Customers: (r) => JSON.stringify({ id: r?.id }),
     Orders: (r) => JSON.stringify({ id: r?.id }),
-    Devices: (r) => JSON.stringify({ id: r?.id }),
   };
+  const CustomersIdSet = new Set(
+    Array.isArray(Customers)
+      ? Customers.map((r) => getIDValue.Customers?.(r))
+      : getIDValue.Customers?.(Customers)
+  );
   const OrdersIdSet = new Set(
     Array.isArray(Orders)
       ? Orders.map((r) => getIDValue.Orders?.(r))
       : getIDValue.Orders?.(Orders)
   );
-  const DevicesIdSet = new Set(
-    Array.isArray(Devices)
-      ? Devices.map((r) => getIDValue.Devices?.(r))
-      : getIDValue.Devices?.(Devices)
-  );
   const getDisplayValue = {
+    Customers: (r) => `${r?.first ? r?.first + " - " : ""}${r?.id}`,
     Orders: (r) => `${r?.orderNumber ? r?.orderNumber + " - " : ""}${r?.id}`,
-    Devices: (r) => `${r?.orderNumber ? r?.orderNumber + " - " : ""}${r?.id}`,
   };
   const validations = {
-    first: [{ type: "Required" }],
-    last: [{ type: "Required" }],
-    phone: [{ type: "Required" }, { type: "Phone" }],
-    email: [{ type: "Email" }],
+    owner: [{ type: "Required" }],
+    Customers: [],
     Orders: [],
-    Devices: [],
-    teamID: [],
+    members: [],
+    settings: [{ type: "JSON" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -315,6 +315,35 @@ export default function CustomerUpdateForm(props) {
     }
     setErrors((errors) => ({ ...errors, [fieldName]: validationResponse }));
     return validationResponse;
+  };
+  const fetchCustomersRecords = async (value) => {
+    setCustomersLoading(true);
+    const newOptions = [];
+    let newNext = "";
+    while (newOptions.length < autocompleteLength && newNext != null) {
+      const variables = {
+        limit: autocompleteLength * 5,
+        filter: {
+          or: [{ first: { contains: value } }, { id: { contains: value } }],
+        },
+      };
+      if (newNext) {
+        variables["nextToken"] = newNext;
+      }
+      const result = (
+        await API.graphql({
+          query: listCustomers,
+          variables,
+        })
+      )?.data?.listCustomers?.items;
+      var loaded = result.filter(
+        (item) => !CustomersIdSet.has(getIDValue.Customers?.(item))
+      );
+      newOptions.push(...loaded);
+      newNext = result.nextToken;
+    }
+    setCustomersRecords(newOptions.slice(0, autocompleteLength));
+    setCustomersLoading(false);
   };
   const fetchOrdersRecords = async (value) => {
     setOrdersLoading(true);
@@ -348,41 +377,9 @@ export default function CustomerUpdateForm(props) {
     setOrdersRecords(newOptions.slice(0, autocompleteLength));
     setOrdersLoading(false);
   };
-  const fetchDevicesRecords = async (value) => {
-    setDevicesLoading(true);
-    const newOptions = [];
-    let newNext = "";
-    while (newOptions.length < autocompleteLength && newNext != null) {
-      const variables = {
-        limit: autocompleteLength * 5,
-        filter: {
-          or: [
-            { orderNumber: { contains: value } },
-            { id: { contains: value } },
-          ],
-        },
-      };
-      if (newNext) {
-        variables["nextToken"] = newNext;
-      }
-      const result = (
-        await API.graphql({
-          query: listOrders,
-          variables,
-        })
-      )?.data?.listOrders?.items;
-      var loaded = result.filter(
-        (item) => !DevicesIdSet.has(getIDValue.Devices?.(item))
-      );
-      newOptions.push(...loaded);
-      newNext = result.nextToken;
-    }
-    setDevicesRecords(newOptions.slice(0, autocompleteLength));
-    setDevicesLoading(false);
-  };
   React.useEffect(() => {
+    fetchCustomersRecords("");
     fetchOrdersRecords("");
-    fetchDevicesRecords("");
   }, []);
   return (
     <Grid
@@ -393,13 +390,11 @@ export default function CustomerUpdateForm(props) {
       onSubmit={async (event) => {
         event.preventDefault();
         let modelFields = {
-          first,
-          last,
-          phone,
-          email: email ?? null,
+          owner,
+          Customers: Customers ?? null,
           Orders: Orders ?? null,
-          Devices: Devices ?? null,
-          teamID: teamID ?? null,
+          members: members ?? null,
+          settings: settings ?? null,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -438,6 +433,55 @@ export default function CustomerUpdateForm(props) {
             }
           });
           const promises = [];
+          const customersToLink = [];
+          const customersToUnLink = [];
+          const customersSet = new Set();
+          const linkedCustomersSet = new Set();
+          Customers.forEach((r) => customersSet.add(getIDValue.Customers?.(r)));
+          linkedCustomers.forEach((r) =>
+            linkedCustomersSet.add(getIDValue.Customers?.(r))
+          );
+          linkedCustomers.forEach((r) => {
+            if (!customersSet.has(getIDValue.Customers?.(r))) {
+              customersToUnLink.push(r);
+            }
+          });
+          Customers.forEach((r) => {
+            if (!linkedCustomersSet.has(getIDValue.Customers?.(r))) {
+              customersToLink.push(r);
+            }
+          });
+          customersToUnLink.forEach((original) => {
+            if (!canUnlinkCustomers) {
+              throw Error(
+                `Customer ${original.id} cannot be unlinked from Team because teamID is a required field.`
+              );
+            }
+            promises.push(
+              API.graphql({
+                query: updateCustomer,
+                variables: {
+                  input: {
+                    id: original.id,
+                    teamID: null,
+                  },
+                },
+              })
+            );
+          });
+          customersToLink.forEach((original) => {
+            promises.push(
+              API.graphql({
+                query: updateCustomer,
+                variables: {
+                  input: {
+                    id: original.id,
+                    teamID: teamRecord.id,
+                  },
+                },
+              })
+            );
+          });
           const ordersToLink = [];
           const ordersToUnLink = [];
           const ordersSet = new Set();
@@ -459,7 +503,7 @@ export default function CustomerUpdateForm(props) {
           ordersToUnLink.forEach((original) => {
             if (!canUnlinkOrders) {
               throw Error(
-                `Order ${original.id} cannot be unlinked from Customer because customerID is a required field.`
+                `Order ${original.id} cannot be unlinked from Team because teamID is a required field.`
               );
             }
             promises.push(
@@ -468,7 +512,7 @@ export default function CustomerUpdateForm(props) {
                 variables: {
                   input: {
                     id: original.id,
-                    customerID: null,
+                    teamID: null,
                   },
                 },
               })
@@ -481,74 +525,23 @@ export default function CustomerUpdateForm(props) {
                 variables: {
                   input: {
                     id: original.id,
-                    customerID: customerRecord.id,
-                  },
-                },
-              })
-            );
-          });
-          const devicesToLink = [];
-          const devicesToUnLink = [];
-          const devicesSet = new Set();
-          const linkedDevicesSet = new Set();
-          Devices.forEach((r) => devicesSet.add(getIDValue.Devices?.(r)));
-          linkedDevices.forEach((r) =>
-            linkedDevicesSet.add(getIDValue.Devices?.(r))
-          );
-          linkedDevices.forEach((r) => {
-            if (!devicesSet.has(getIDValue.Devices?.(r))) {
-              devicesToUnLink.push(r);
-            }
-          });
-          Devices.forEach((r) => {
-            if (!linkedDevicesSet.has(getIDValue.Devices?.(r))) {
-              devicesToLink.push(r);
-            }
-          });
-          devicesToUnLink.forEach((original) => {
-            if (!canUnlinkDevices) {
-              throw Error(
-                `Order ${original.id} cannot be unlinked from Customer because customerID is a required field.`
-              );
-            }
-            promises.push(
-              API.graphql({
-                query: updateOrder,
-                variables: {
-                  input: {
-                    id: original.id,
-                    customerID: null,
-                  },
-                },
-              })
-            );
-          });
-          devicesToLink.forEach((original) => {
-            promises.push(
-              API.graphql({
-                query: updateOrder,
-                variables: {
-                  input: {
-                    id: original.id,
-                    customerID: customerRecord.id,
+                    teamID: teamRecord.id,
                   },
                 },
               })
             );
           });
           const modelFieldsToSave = {
-            first: modelFields.first,
-            last: modelFields.last,
-            phone: modelFields.phone,
-            email: modelFields.email ?? null,
-            teamID: modelFields.teamID ?? null,
+            owner: modelFields.owner,
+            members: modelFields.members ?? null,
+            settings: modelFields.settings ?? null,
           };
           promises.push(
             API.graphql({
-              query: updateCustomer,
+              query: updateTeam,
               variables: {
                 input: {
-                  id: customerRecord.id,
+                  id: teamRecord.id,
                   ...modelFieldsToSave,
                 },
               },
@@ -565,142 +558,129 @@ export default function CustomerUpdateForm(props) {
           }
         }
       }}
-      {...getOverrideProps(overrides, "CustomerUpdateForm")}
+      {...getOverrideProps(overrides, "TeamUpdateForm")}
       {...rest}
     >
       <TextField
-        label="First"
+        label="Owner"
         isRequired={true}
         isReadOnly={false}
-        value={first}
+        value={owner}
         onChange={(e) => {
           let { value } = e.target;
           if (onChange) {
             const modelFields = {
-              first: value,
-              last,
-              phone,
-              email,
+              owner: value,
+              Customers,
               Orders,
-              Devices,
-              teamID,
+              members,
+              settings,
             };
             const result = onChange(modelFields);
-            value = result?.first ?? value;
+            value = result?.owner ?? value;
           }
-          if (errors.first?.hasError) {
-            runValidationTasks("first", value);
+          if (errors.owner?.hasError) {
+            runValidationTasks("owner", value);
           }
-          setFirst(value);
+          setOwner(value);
         }}
-        onBlur={() => runValidationTasks("first", first)}
-        errorMessage={errors.first?.errorMessage}
-        hasError={errors.first?.hasError}
-        {...getOverrideProps(overrides, "first")}
-      ></TextField>
-      <TextField
-        label="Last"
-        isRequired={true}
-        isReadOnly={false}
-        value={last}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              first,
-              last: value,
-              phone,
-              email,
-              Orders,
-              Devices,
-              teamID,
-            };
-            const result = onChange(modelFields);
-            value = result?.last ?? value;
-          }
-          if (errors.last?.hasError) {
-            runValidationTasks("last", value);
-          }
-          setLast(value);
-        }}
-        onBlur={() => runValidationTasks("last", last)}
-        errorMessage={errors.last?.errorMessage}
-        hasError={errors.last?.hasError}
-        {...getOverrideProps(overrides, "last")}
-      ></TextField>
-      <TextField
-        label="Phone"
-        isRequired={true}
-        isReadOnly={false}
-        type="tel"
-        value={phone}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              first,
-              last,
-              phone: value,
-              email,
-              Orders,
-              Devices,
-              teamID,
-            };
-            const result = onChange(modelFields);
-            value = result?.phone ?? value;
-          }
-          if (errors.phone?.hasError) {
-            runValidationTasks("phone", value);
-          }
-          setPhone(value);
-        }}
-        onBlur={() => runValidationTasks("phone", phone)}
-        errorMessage={errors.phone?.errorMessage}
-        hasError={errors.phone?.hasError}
-        {...getOverrideProps(overrides, "phone")}
-      ></TextField>
-      <TextField
-        label="Email"
-        isRequired={false}
-        isReadOnly={false}
-        value={email}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              first,
-              last,
-              phone,
-              email: value,
-              Orders,
-              Devices,
-              teamID,
-            };
-            const result = onChange(modelFields);
-            value = result?.email ?? value;
-          }
-          if (errors.email?.hasError) {
-            runValidationTasks("email", value);
-          }
-          setEmail(value);
-        }}
-        onBlur={() => runValidationTasks("email", email)}
-        errorMessage={errors.email?.errorMessage}
-        hasError={errors.email?.hasError}
-        {...getOverrideProps(overrides, "email")}
+        onBlur={() => runValidationTasks("owner", owner)}
+        errorMessage={errors.owner?.errorMessage}
+        hasError={errors.owner?.hasError}
+        {...getOverrideProps(overrides, "owner")}
       ></TextField>
       <ArrayField
         onChange={async (items) => {
           let values = items;
           if (onChange) {
             const modelFields = {
-              first,
-              last,
-              phone,
-              email,
+              owner,
+              Customers: values,
+              Orders,
+              members,
+              settings,
+            };
+            const result = onChange(modelFields);
+            values = result?.Customers ?? values;
+          }
+          setCustomers(values);
+          setCurrentCustomersValue(undefined);
+          setCurrentCustomersDisplayValue("");
+        }}
+        currentFieldValue={currentCustomersValue}
+        label={"Customers"}
+        items={Customers}
+        hasError={errors?.Customers?.hasError}
+        runValidationTasks={async () =>
+          await runValidationTasks("Customers", currentCustomersValue)
+        }
+        errorMessage={errors?.Customers?.errorMessage}
+        getBadgeText={getDisplayValue.Customers}
+        setFieldValue={(model) => {
+          setCurrentCustomersDisplayValue(
+            model ? getDisplayValue.Customers(model) : ""
+          );
+          setCurrentCustomersValue(model);
+        }}
+        inputFieldRef={CustomersRef}
+        defaultFieldValue={""}
+      >
+        <Autocomplete
+          label="Customers"
+          isRequired={false}
+          isReadOnly={false}
+          placeholder="Search Customer"
+          value={currentCustomersDisplayValue}
+          options={CustomersRecords.filter(
+            (r) => !CustomersIdSet.has(getIDValue.Customers?.(r))
+          ).map((r) => ({
+            id: getIDValue.Customers?.(r),
+            label: getDisplayValue.Customers?.(r),
+          }))}
+          isLoading={CustomersLoading}
+          onSelect={({ id, label }) => {
+            setCurrentCustomersValue(
+              CustomersRecords.find((r) =>
+                Object.entries(JSON.parse(id)).every(
+                  ([key, value]) => r[key] === value
+                )
+              )
+            );
+            setCurrentCustomersDisplayValue(label);
+            runValidationTasks("Customers", label);
+          }}
+          onClear={() => {
+            setCurrentCustomersDisplayValue("");
+          }}
+          onChange={(e) => {
+            let { value } = e.target;
+            fetchCustomersRecords(value);
+            if (errors.Customers?.hasError) {
+              runValidationTasks("Customers", value);
+            }
+            setCurrentCustomersDisplayValue(value);
+            setCurrentCustomersValue(undefined);
+          }}
+          onBlur={() =>
+            runValidationTasks("Customers", currentCustomersDisplayValue)
+          }
+          errorMessage={errors.Customers?.errorMessage}
+          hasError={errors.Customers?.hasError}
+          ref={CustomersRef}
+          labelHidden={true}
+          {...getOverrideProps(overrides, "Customers")}
+        ></Autocomplete>
+      </ArrayField>
+      <ArrayField
+        onChange={async (items) => {
+          let values = items;
+          if (onChange) {
+            const modelFields = {
+              owner,
+              Customers,
               Orders: values,
-              Devices,
-              teamID,
+              members,
+              settings,
             };
             const result = onChange(modelFields);
             values = result?.Orders ?? values;
@@ -776,115 +756,78 @@ export default function CustomerUpdateForm(props) {
           let values = items;
           if (onChange) {
             const modelFields = {
-              first,
-              last,
-              phone,
-              email,
+              owner,
+              Customers,
               Orders,
-              Devices: values,
-              teamID,
+              members: values,
+              settings,
             };
             const result = onChange(modelFields);
-            values = result?.Devices ?? values;
+            values = result?.members ?? values;
           }
-          setDevices(values);
-          setCurrentDevicesValue(undefined);
-          setCurrentDevicesDisplayValue("");
+          setMembers(values);
+          setCurrentMembersValue("");
         }}
-        currentFieldValue={currentDevicesValue}
-        label={"Devices"}
-        items={Devices}
-        hasError={errors?.Devices?.hasError}
+        currentFieldValue={currentMembersValue}
+        label={"Members"}
+        items={members}
+        hasError={errors?.members?.hasError}
         runValidationTasks={async () =>
-          await runValidationTasks("Devices", currentDevicesValue)
+          await runValidationTasks("members", currentMembersValue)
         }
-        errorMessage={errors?.Devices?.errorMessage}
-        getBadgeText={getDisplayValue.Devices}
-        setFieldValue={(model) => {
-          setCurrentDevicesDisplayValue(
-            model ? getDisplayValue.Devices(model) : ""
-          );
-          setCurrentDevicesValue(model);
-        }}
-        inputFieldRef={DevicesRef}
+        errorMessage={errors?.members?.errorMessage}
+        setFieldValue={setCurrentMembersValue}
+        inputFieldRef={membersRef}
         defaultFieldValue={""}
       >
-        <Autocomplete
-          label="Devices"
+        <TextField
+          label="Members"
           isRequired={false}
           isReadOnly={false}
-          placeholder="Search Order"
-          value={currentDevicesDisplayValue}
-          options={DevicesRecords.filter(
-            (r) => !DevicesIdSet.has(getIDValue.Devices?.(r))
-          ).map((r) => ({
-            id: getIDValue.Devices?.(r),
-            label: getDisplayValue.Devices?.(r),
-          }))}
-          isLoading={DevicesLoading}
-          onSelect={({ id, label }) => {
-            setCurrentDevicesValue(
-              DevicesRecords.find((r) =>
-                Object.entries(JSON.parse(id)).every(
-                  ([key, value]) => r[key] === value
-                )
-              )
-            );
-            setCurrentDevicesDisplayValue(label);
-            runValidationTasks("Devices", label);
-          }}
-          onClear={() => {
-            setCurrentDevicesDisplayValue("");
-          }}
+          value={currentMembersValue}
           onChange={(e) => {
             let { value } = e.target;
-            fetchDevicesRecords(value);
-            if (errors.Devices?.hasError) {
-              runValidationTasks("Devices", value);
+            if (errors.members?.hasError) {
+              runValidationTasks("members", value);
             }
-            setCurrentDevicesDisplayValue(value);
-            setCurrentDevicesValue(undefined);
+            setCurrentMembersValue(value);
           }}
-          onBlur={() =>
-            runValidationTasks("Devices", currentDevicesDisplayValue)
-          }
-          errorMessage={errors.Devices?.errorMessage}
-          hasError={errors.Devices?.hasError}
-          ref={DevicesRef}
+          onBlur={() => runValidationTasks("members", currentMembersValue)}
+          errorMessage={errors.members?.errorMessage}
+          hasError={errors.members?.hasError}
+          ref={membersRef}
           labelHidden={true}
-          {...getOverrideProps(overrides, "Devices")}
-        ></Autocomplete>
+          {...getOverrideProps(overrides, "members")}
+        ></TextField>
       </ArrayField>
-      <TextField
-        label="Team id"
+      <TextAreaField
+        label="Settings"
         isRequired={false}
         isReadOnly={false}
-        value={teamID}
+        value={settings}
         onChange={(e) => {
           let { value } = e.target;
           if (onChange) {
             const modelFields = {
-              first,
-              last,
-              phone,
-              email,
+              owner,
+              Customers,
               Orders,
-              Devices,
-              teamID: value,
+              members,
+              settings: value,
             };
             const result = onChange(modelFields);
-            value = result?.teamID ?? value;
+            value = result?.settings ?? value;
           }
-          if (errors.teamID?.hasError) {
-            runValidationTasks("teamID", value);
+          if (errors.settings?.hasError) {
+            runValidationTasks("settings", value);
           }
-          setTeamID(value);
+          setSettings(value);
         }}
-        onBlur={() => runValidationTasks("teamID", teamID)}
-        errorMessage={errors.teamID?.errorMessage}
-        hasError={errors.teamID?.hasError}
-        {...getOverrideProps(overrides, "teamID")}
-      ></TextField>
+        onBlur={() => runValidationTasks("settings", settings)}
+        errorMessage={errors.settings?.errorMessage}
+        hasError={errors.settings?.hasError}
+        {...getOverrideProps(overrides, "settings")}
+      ></TextAreaField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}
@@ -896,7 +839,7 @@ export default function CustomerUpdateForm(props) {
             event.preventDefault();
             resetStateValues();
           }}
-          isDisabled={!(idProp || customerModelProp)}
+          isDisabled={!(idProp || teamModelProp)}
           {...getOverrideProps(overrides, "ResetButton")}
         ></Button>
         <Flex
@@ -908,7 +851,7 @@ export default function CustomerUpdateForm(props) {
             type="submit"
             variation="primary"
             isDisabled={
-              !(idProp || customerModelProp) ||
+              !(idProp || teamModelProp) ||
               Object.values(errors).some((e) => e?.hasError)
             }
             {...getOverrideProps(overrides, "SubmitButton")}

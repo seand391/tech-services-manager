@@ -22,6 +22,7 @@ export const createCustomer = /* GraphQL */ `
           completed
           customerID
           deviceID
+          teamID
           createdAt
           updatedAt
           __typename
@@ -32,11 +33,13 @@ export const createCustomer = /* GraphQL */ `
       Devices {
         items {
           id
-          type
-          brand
-          password
-          serialNumber
+          orderNumber
+          intakeDate
+          status
+          completed
           customerID
+          deviceID
+          teamID
           createdAt
           updatedAt
           __typename
@@ -44,6 +47,7 @@ export const createCustomer = /* GraphQL */ `
         nextToken
         __typename
       }
+      teamID
       createdAt
       updatedAt
       __typename
@@ -70,6 +74,7 @@ export const updateCustomer = /* GraphQL */ `
           completed
           customerID
           deviceID
+          teamID
           createdAt
           updatedAt
           __typename
@@ -80,11 +85,13 @@ export const updateCustomer = /* GraphQL */ `
       Devices {
         items {
           id
-          type
-          brand
-          password
-          serialNumber
+          orderNumber
+          intakeDate
+          status
+          completed
           customerID
+          deviceID
+          teamID
           createdAt
           updatedAt
           __typename
@@ -92,6 +99,7 @@ export const updateCustomer = /* GraphQL */ `
         nextToken
         __typename
       }
+      teamID
       createdAt
       updatedAt
       __typename
@@ -118,6 +126,7 @@ export const deleteCustomer = /* GraphQL */ `
           completed
           customerID
           deviceID
+          teamID
           createdAt
           updatedAt
           __typename
@@ -128,11 +137,13 @@ export const deleteCustomer = /* GraphQL */ `
       Devices {
         items {
           id
-          type
-          brand
-          password
-          serialNumber
+          orderNumber
+          intakeDate
+          status
+          completed
           customerID
+          deviceID
+          teamID
           createdAt
           updatedAt
           __typename
@@ -140,6 +151,7 @@ export const deleteCustomer = /* GraphQL */ `
         nextToken
         __typename
       }
+      teamID
       createdAt
       updatedAt
       __typename
@@ -167,6 +179,7 @@ export const createDevice = /* GraphQL */ `
           completed
           customerID
           deviceID
+          teamID
           createdAt
           updatedAt
           __typename
@@ -201,6 +214,7 @@ export const updateDevice = /* GraphQL */ `
           completed
           customerID
           deviceID
+          teamID
           createdAt
           updatedAt
           __typename
@@ -235,6 +249,7 @@ export const deleteDevice = /* GraphQL */ `
           completed
           customerID
           deviceID
+          teamID
           createdAt
           updatedAt
           __typename
@@ -261,6 +276,7 @@ export const createOrder = /* GraphQL */ `
       completed
       customerID
       deviceID
+      teamID
       createdAt
       updatedAt
       __typename
@@ -280,6 +296,7 @@ export const updateOrder = /* GraphQL */ `
       completed
       customerID
       deviceID
+      teamID
       createdAt
       updatedAt
       __typename
@@ -299,6 +316,7 @@ export const deleteOrder = /* GraphQL */ `
       completed
       customerID
       deviceID
+      teamID
       createdAt
       updatedAt
       __typename

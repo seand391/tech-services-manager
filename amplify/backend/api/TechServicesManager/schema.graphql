@@ -5,7 +5,8 @@ type Customer @model @auth(rules: [{allow: public}]) {
   phone: AWSPhone!
   email: AWSEmail
   Orders: [Order] @hasMany(indexName: "byCustomer", fields: ["id"])
-  Devices: [Device] @hasMany(indexName: "byCustomer", fields: ["id"])
+  Devices: [Order] @hasMany(indexName: "byCustomer", fields: ["id"])
+  teamID: ID
 }
 
 type Device @model @auth(rules: [{allow: public}]) {
@@ -18,7 +19,7 @@ type Device @model @auth(rules: [{allow: public}]) {
   Orders: [Order] @hasMany(indexName: "byDevice", fields: ["id"])
 }
 
-type Order @model @auth(rules: [{allow: public}]) {
+type Order @model @auth(rules: [{allow: public, operations: [create, read, update]}]) {
   id: ID!
   orderNumber: String!
   intakeDate: AWSDateTime!
@@ -26,4 +27,6 @@ type Order @model @auth(rules: [{allow: public}]) {
   completed: Boolean!
   customerID: ID! @index(name: "byCustomer")
   deviceID: ID! @index(name: "byDevice")
-} 
+  teamID: ID
+}
+ 

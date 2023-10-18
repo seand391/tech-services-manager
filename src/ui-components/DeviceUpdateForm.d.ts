@@ -36,7 +36,7 @@ export declare type DeviceUpdateFormOverridesProps = {
     brand?: PrimitiveOverrideProps<TextFieldProps>;
     password?: PrimitiveOverrideProps<TextFieldProps>;
     serialNumber?: PrimitiveOverrideProps<TextFieldProps>;
-    customerID?: PrimitiveOverrideProps<AutocompleteProps>;
+    customerID?: PrimitiveOverrideProps<TextFieldProps>;
     Orders?: PrimitiveOverrideProps<AutocompleteProps>;
 } & EscapeHatchProps;
 export declare type DeviceUpdateFormProps = React.PropsWithChildren<{

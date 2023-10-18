@@ -8,9 +8,10 @@
 import * as React from "react";
 import { Button, Flex, Grid, Heading, TextField } from "@aws-amplify/ui-react";
 import { getOverrideProps } from "@aws-amplify/ui-react/internal";
-import { fetchByPath, validateField } from "./utils";
+import { fetchByPath, validateField } from "@/ui-components/utils";
 import { API } from "aws-amplify";
 import { createCustomer } from "../graphql/mutations";
+import { currentUserSub } from "../pages/api/helpers";
 export default function CustomerCreateForm(props) {
   const {
     clearOnSuccess = true,
@@ -105,6 +106,7 @@ export default function CustomerCreateForm(props) {
               modelFields[key] = null;
             }
           });
+          modelFields["teamID"] = await currentUserSub();
           console.log(modelFields);
           await API.graphql({
             query: createCustomer,

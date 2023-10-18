@@ -205,6 +205,7 @@ export default function OrderUpdateForm(props) {
     completed: false,
     customerID: undefined,
     deviceID: undefined,
+    teamID: "",
   };
   const [orderNumber, setOrderNumber] = React.useState(
     initialValues.orderNumber
@@ -223,6 +224,7 @@ export default function OrderUpdateForm(props) {
   const [selectedDeviceIDRecords, setSelectedDeviceIDRecords] = React.useState(
     []
   );
+  const [teamID, setTeamID] = React.useState(initialValues.teamID);
   const autocompleteLength = 10;
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
@@ -239,6 +241,7 @@ export default function OrderUpdateForm(props) {
     setDeviceID(cleanValues.deviceID);
     setCurrentDeviceIDValue(undefined);
     setCurrentDeviceIDDisplayValue("");
+    setTeamID(cleanValues.teamID);
     setErrors({});
   };
   const [orderRecord, setOrderRecord] = React.useState(orderModelProp);
@@ -300,6 +303,7 @@ export default function OrderUpdateForm(props) {
     completed: [{ type: "Required" }],
     customerID: [{ type: "Required" }],
     deviceID: [{ type: "Required" }],
+    teamID: [],
   };
   const runValidationTasks = async (
     fieldName,
@@ -408,6 +412,7 @@ export default function OrderUpdateForm(props) {
           completed,
           customerID,
           deviceID,
+          teamID: teamID ?? null,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -474,6 +479,7 @@ export default function OrderUpdateForm(props) {
               completed,
               customerID,
               deviceID,
+              teamID,
             };
             const result = onChange(modelFields);
             value = result?.orderNumber ?? value;
@@ -505,6 +511,7 @@ export default function OrderUpdateForm(props) {
               completed,
               customerID,
               deviceID,
+              teamID,
             };
             const result = onChange(modelFields);
             value = result?.intakeDate ?? value;
@@ -534,6 +541,7 @@ export default function OrderUpdateForm(props) {
               completed,
               customerID,
               deviceID,
+              teamID,
             };
             const result = onChange(modelFields);
             value = result?.status ?? value;
@@ -563,6 +571,7 @@ export default function OrderUpdateForm(props) {
               completed: value,
               customerID,
               deviceID,
+              teamID,
             };
             const result = onChange(modelFields);
             value = result?.completed ?? value;
@@ -589,6 +598,7 @@ export default function OrderUpdateForm(props) {
               completed,
               customerID: value,
               deviceID,
+              teamID,
             };
             const result = onChange(modelFields);
             value = result?.customerID ?? value;
@@ -686,6 +696,7 @@ export default function OrderUpdateForm(props) {
               completed,
               customerID,
               deviceID: value,
+              teamID,
             };
             const result = onChange(modelFields);
             value = result?.deviceID ?? value;
@@ -769,6 +780,36 @@ export default function OrderUpdateForm(props) {
           {...getOverrideProps(overrides, "deviceID")}
         ></Autocomplete>
       </ArrayField>
+      <TextField
+        label="Team id"
+        isRequired={false}
+        isReadOnly={false}
+        value={teamID}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              orderNumber,
+              intakeDate,
+              status,
+              completed,
+              customerID,
+              deviceID,
+              teamID: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.teamID ?? value;
+          }
+          if (errors.teamID?.hasError) {
+            runValidationTasks("teamID", value);
+          }
+          setTeamID(value);
+        }}
+        onBlur={() => runValidationTasks("teamID", teamID)}
+        errorMessage={errors.teamID?.errorMessage}
+        hasError={errors.teamID?.hasError}
+        {...getOverrideProps(overrides, "teamID")}
+      ></TextField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

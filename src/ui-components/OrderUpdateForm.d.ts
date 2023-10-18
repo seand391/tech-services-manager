@@ -20,6 +20,7 @@ export declare type OrderUpdateFormInputValues = {
     completed?: boolean;
     customerID?: string;
     deviceID?: string;
+    teamID?: string;
 };
 export declare type OrderUpdateFormValidationValues = {
     orderNumber?: ValidationFunction<string>;
@@ -28,6 +29,7 @@ export declare type OrderUpdateFormValidationValues = {
     completed?: ValidationFunction<boolean>;
     customerID?: ValidationFunction<string>;
     deviceID?: ValidationFunction<string>;
+    teamID?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type OrderUpdateFormOverridesProps = {
@@ -38,6 +40,7 @@ export declare type OrderUpdateFormOverridesProps = {
     completed?: PrimitiveOverrideProps<SwitchFieldProps>;
     customerID?: PrimitiveOverrideProps<AutocompleteProps>;
     deviceID?: PrimitiveOverrideProps<AutocompleteProps>;
+    teamID?: PrimitiveOverrideProps<TextFieldProps>;
 } & EscapeHatchProps;
 export declare type OrderUpdateFormProps = React.PropsWithChildren<{
     overrides?: OrderUpdateFormOverridesProps | undefined | null;

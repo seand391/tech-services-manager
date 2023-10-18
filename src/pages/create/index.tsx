@@ -13,11 +13,12 @@ export default function Create() {
         Create new customer
     </Button>
     <OrderCreateForm
-        width="340px"
+        width="500px"
+        maxWidth="90%"
         border="1px solid black"
         borderRadius="1rem"
         onSuccess={() => router.push("../success")}
-        onError={() => console.log("error creating order")}>
+        onError={() => alert("Error creating order")}>
         
     </OrderCreateForm>
     </Flex>
