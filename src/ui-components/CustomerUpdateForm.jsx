@@ -19,8 +19,7 @@ import {
   TextField,
   useTheme,
 } from "@aws-amplify/ui-react";
-import { getOverrideProps } from "@aws-amplify/ui-react/internal";
-import { fetchByPath, validateField } from "./utils";
+import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { API } from "aws-amplify";
 import { getCustomer, listOrders } from "../graphql/queries";
 import { updateCustomer, updateOrder } from "../graphql/mutations";
@@ -245,7 +244,7 @@ export default function CustomerUpdateForm(props) {
       const record = idProp
         ? (
             await API.graphql({
-              query: getCustomer,
+              query: getCustomer.replaceAll("__typename", ""),
               variables: { id: idProp },
             })
           )?.data?.getCustomer
@@ -335,7 +334,7 @@ export default function CustomerUpdateForm(props) {
       }
       const result = (
         await API.graphql({
-          query: listOrders,
+          query: listOrders.replaceAll("__typename", ""),
           variables,
         })
       )?.data?.listOrders?.items;
@@ -367,7 +366,7 @@ export default function CustomerUpdateForm(props) {
       }
       const result = (
         await API.graphql({
-          query: listOrders,
+          query: listOrders.replaceAll("__typename", ""),
           variables,
         })
       )?.data?.listOrders?.items;
@@ -464,7 +463,7 @@ export default function CustomerUpdateForm(props) {
             }
             promises.push(
               API.graphql({
-                query: updateOrder,
+                query: updateOrder.replaceAll("__typename", ""),
                 variables: {
                   input: {
                     id: original.id,
@@ -477,7 +476,7 @@ export default function CustomerUpdateForm(props) {
           ordersToLink.forEach((original) => {
             promises.push(
               API.graphql({
-                query: updateOrder,
+                query: updateOrder.replaceAll("__typename", ""),
                 variables: {
                   input: {
                     id: original.id,
@@ -513,7 +512,7 @@ export default function CustomerUpdateForm(props) {
             }
             promises.push(
               API.graphql({
-                query: updateOrder,
+                query: updateOrder.replaceAll("__typename", ""),
                 variables: {
                   input: {
                     id: original.id,
@@ -526,7 +525,7 @@ export default function CustomerUpdateForm(props) {
           devicesToLink.forEach((original) => {
             promises.push(
               API.graphql({
-                query: updateOrder,
+                query: updateOrder.replaceAll("__typename", ""),
                 variables: {
                   input: {
                     id: original.id,
@@ -545,7 +544,7 @@ export default function CustomerUpdateForm(props) {
           };
           promises.push(
             API.graphql({
-              query: updateCustomer,
+              query: updateCustomer.replaceAll("__typename", ""),
               variables: {
                 input: {
                   id: customerRecord.id,
@@ -569,7 +568,7 @@ export default function CustomerUpdateForm(props) {
       {...rest}
     >
       <TextField
-        label="First"
+        label="First name"
         isRequired={true}
         isReadOnly={false}
         value={first}
@@ -599,7 +598,7 @@ export default function CustomerUpdateForm(props) {
         {...getOverrideProps(overrides, "first")}
       ></TextField>
       <TextField
-        label="Last"
+        label="Last name"
         isRequired={true}
         isReadOnly={false}
         value={last}
@@ -629,7 +628,7 @@ export default function CustomerUpdateForm(props) {
         {...getOverrideProps(overrides, "last")}
       ></TextField>
       <TextField
-        label="Phone"
+        label="Phone number"
         isRequired={true}
         isReadOnly={false}
         type="tel"
@@ -660,7 +659,7 @@ export default function CustomerUpdateForm(props) {
         {...getOverrideProps(overrides, "phone")}
       ></TextField>
       <TextField
-        label="Email"
+        label="Email address"
         isRequired={false}
         isReadOnly={false}
         value={email}

@@ -7,8 +7,7 @@
 /* eslint-disable */
 import * as React from "react";
 import { Button, Flex, Grid, Heading, TextField } from "@aws-amplify/ui-react";
-import { getOverrideProps } from "@aws-amplify/ui-react/internal";
-import { fetchByPath, validateField } from "./utils";
+import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { API } from "aws-amplify";
 import { createCustomer } from "../graphql/mutations";
 export default function CustomerCreateForm(props) {
@@ -105,9 +104,8 @@ export default function CustomerCreateForm(props) {
               modelFields[key] = null;
             }
           });
-          console.log(modelFields);
           await API.graphql({
-            query: createCustomer,
+            query: createCustomer.replaceAll("__typename", ""),
             variables: {
               input: {
                 ...modelFields,
@@ -136,7 +134,7 @@ export default function CustomerCreateForm(props) {
         {...getOverrideProps(overrides, "SectionalElement0")}
       ></Heading>
       <TextField
-        label="First"
+        label="First name"
         isRequired={true}
         isReadOnly={false}
         value={first}
@@ -163,7 +161,7 @@ export default function CustomerCreateForm(props) {
         {...getOverrideProps(overrides, "first")}
       ></TextField>
       <TextField
-        label="Last"
+        label="Last name"
         isRequired={true}
         isReadOnly={false}
         value={last}
@@ -190,7 +188,7 @@ export default function CustomerCreateForm(props) {
         {...getOverrideProps(overrides, "last")}
       ></TextField>
       <TextField
-        label="Phone"
+        label="Phone number"
         isRequired={true}
         isReadOnly={false}
         type="tel"
@@ -218,7 +216,7 @@ export default function CustomerCreateForm(props) {
         {...getOverrideProps(overrides, "phone")}
       ></TextField>
       <TextField
-        label="Email"
+        label="Email address"
         isRequired={false}
         isReadOnly={false}
         value={email}

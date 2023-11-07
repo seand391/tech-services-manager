@@ -20,8 +20,7 @@ import {
   TextField,
   useTheme,
 } from "@aws-amplify/ui-react";
-import { getOverrideProps } from "@aws-amplify/ui-react/internal";
-import { fetchByPath, validateField } from "./utils";
+import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { API } from "aws-amplify";
 import {
   getCustomer,
@@ -250,7 +249,7 @@ export default function OrderUpdateForm(props) {
       const record = idProp
         ? (
             await API.graphql({
-              query: getOrder,
+              query: getOrder.replaceAll("__typename", ""),
               variables: { id: idProp },
             })
           )?.data?.getOrder
@@ -259,7 +258,7 @@ export default function OrderUpdateForm(props) {
       const customerRecord = customerIDRecord
         ? (
             await API.graphql({
-              query: getCustomer,
+              query: getCustomer.replaceAll("__typename", ""),
               variables: { id: customerIDRecord },
             })
           )?.data?.getCustomer
@@ -270,7 +269,7 @@ export default function OrderUpdateForm(props) {
       const deviceRecord = deviceIDRecord
         ? (
             await API.graphql({
-              query: getDevice,
+              query: getDevice.replaceAll("__typename", ""),
               variables: { id: deviceIDRecord },
             })
           )?.data?.getDevice
@@ -355,7 +354,7 @@ export default function OrderUpdateForm(props) {
       }
       const result = (
         await API.graphql({
-          query: listCustomers,
+          query: listCustomers.replaceAll("__typename", ""),
           variables,
         })
       )?.data?.listCustomers?.items;
@@ -382,7 +381,7 @@ export default function OrderUpdateForm(props) {
       }
       const result = (
         await API.graphql({
-          query: listDevices,
+          query: listDevices.replaceAll("__typename", ""),
           variables,
         })
       )?.data?.listDevices?.items;
@@ -443,7 +442,7 @@ export default function OrderUpdateForm(props) {
             }
           });
           await API.graphql({
-            query: updateOrder,
+            query: updateOrder.replaceAll("__typename", ""),
             variables: {
               input: {
                 id: orderRecord.id,

@@ -19,8 +19,7 @@ import {
   TextField,
   useTheme,
 } from "@aws-amplify/ui-react";
-import { getOverrideProps } from "@aws-amplify/ui-react/internal";
-import { fetchByPath, validateField } from "./utils";
+import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { API } from "aws-amplify";
 import { listOrders } from "../graphql/queries";
 import { createDevice, updateOrder } from "../graphql/mutations";
@@ -280,7 +279,7 @@ export default function DeviceCreateForm(props) {
       }
       const result = (
         await API.graphql({
-          query: listOrders,
+          query: listOrders.replaceAll("__typename", ""),
           variables,
         })
       )?.data?.listOrders?.items;
@@ -357,7 +356,7 @@ export default function DeviceCreateForm(props) {
           };
           const device = (
             await API.graphql({
-              query: createDevice,
+              query: createDevice.replaceAll("__typename", ""),
               variables: {
                 input: {
                   ...modelFieldsToSave,
@@ -370,7 +369,7 @@ export default function DeviceCreateForm(props) {
             ...Orders.reduce((promises, original) => {
               promises.push(
                 API.graphql({
-                  query: updateOrder,
+                  query: updateOrder.replaceAll("__typename", ""),
                   variables: {
                     input: {
                       id: original.id,
@@ -403,6 +402,7 @@ export default function DeviceCreateForm(props) {
         label="Type"
         isRequired={true}
         isReadOnly={false}
+        placeholder="Laptop, tablet, phone, etc."
         value={type}
         onChange={(e) => {
           let { value } = e.target;
@@ -516,7 +516,7 @@ export default function DeviceCreateForm(props) {
         {...getOverrideProps(overrides, "serialNumber")}
       ></TextField>
       <TextField
-        label="Customer id"
+        label="Customer"
         isRequired={true}
         isReadOnly={false}
         value={customerID}

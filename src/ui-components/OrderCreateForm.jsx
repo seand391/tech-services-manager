@@ -15,13 +15,11 @@ import {
   Grid,
   Icon,
   ScrollView,
-  SwitchField,
   Text,
   TextField,
   useTheme,
 } from "@aws-amplify/ui-react";
-import { getOverrideProps } from "@aws-amplify/ui-react/internal";
-import { fetchByPath, validateField } from "./utils";
+import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { API } from "aws-amplify";
 import { listCustomers, listDevices } from "../graphql/queries";
 import { createOrder } from "../graphql/mutations";
@@ -193,19 +191,12 @@ export default function OrderCreateForm(props) {
   } = props;
   const initialValues = {
     orderNumber: "",
-    intakeDate: "",
-    status: "",
-    completed: false,
     customerID: undefined,
     deviceID: undefined,
-    teamID: "",
   };
   const [orderNumber, setOrderNumber] = React.useState(
     initialValues.orderNumber
   );
-  const [intakeDate, setIntakeDate] = React.useState(initialValues.intakeDate);
-  const [status, setStatus] = React.useState(initialValues.status);
-  const [completed, setCompleted] = React.useState(initialValues.completed);
   const [customerID, setCustomerID] = React.useState(initialValues.customerID);
   const [customerIDLoading, setCustomerIDLoading] = React.useState(false);
   const [customerIDRecords, setCustomerIDRecords] = React.useState([]);
@@ -217,21 +208,16 @@ export default function OrderCreateForm(props) {
   const [selectedDeviceIDRecords, setSelectedDeviceIDRecords] = React.useState(
     []
   );
-  const [teamID, setTeamID] = React.useState(initialValues.teamID);
   const autocompleteLength = 10;
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     setOrderNumber(initialValues.orderNumber);
-    setIntakeDate(initialValues.intakeDate);
-    setStatus(initialValues.status);
-    setCompleted(initialValues.completed);
     setCustomerID(initialValues.customerID);
     setCurrentCustomerIDValue(undefined);
     setCurrentCustomerIDDisplayValue("");
     setDeviceID(initialValues.deviceID);
     setCurrentDeviceIDValue(undefined);
     setCurrentDeviceIDDisplayValue("");
-    setTeamID(initialValues.teamID);
     setErrors({});
   };
   const [currentCustomerIDDisplayValue, setCurrentCustomerIDDisplayValue] =
@@ -250,12 +236,8 @@ export default function OrderCreateForm(props) {
   };
   const validations = {
     orderNumber: [{ type: "Required" }],
-    intakeDate: [{ type: "Required" }],
-    status: [],
-    completed: [{ type: "Required" }],
     customerID: [{ type: "Required" }],
     deviceID: [{ type: "Required" }],
-    teamID: [],
   };
   const runValidationTasks = async (
     fieldName,
@@ -274,23 +256,6 @@ export default function OrderCreateForm(props) {
     setErrors((errors) => ({ ...errors, [fieldName]: validationResponse }));
     return validationResponse;
   };
-  const convertToLocal = (date) => {
-    const df = new Intl.DateTimeFormat("default", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      calendar: "iso8601",
-      numberingSystem: "latn",
-      hourCycle: "h23",
-    });
-    const parts = df.formatToParts(date).reduce((acc, part) => {
-      acc[part.type] = part.value;
-      return acc;
-    }, {});
-    return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
-  };
   const fetchCustomerIDRecords = async (value) => {
     setCustomerIDLoading(true);
     const newOptions = [];
@@ -307,7 +272,7 @@ export default function OrderCreateForm(props) {
       }
       const result = (
         await API.graphql({
-          query: listCustomers,
+          query: listCustomers.replaceAll("__typename", ""),
           variables,
         })
       )?.data?.listCustomers?.items;
@@ -334,7 +299,7 @@ export default function OrderCreateForm(props) {
       }
       const result = (
         await API.graphql({
-          query: listDevices,
+          query: listDevices.replaceAll("__typename", ""),
           variables,
         })
       )?.data?.listDevices?.items;
@@ -359,12 +324,8 @@ export default function OrderCreateForm(props) {
         event.preventDefault();
         let modelFields = {
           orderNumber,
-          intakeDate,
-          status,
-          completed,
           customerID,
           deviceID,
-          teamID,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
@@ -395,7 +356,7 @@ export default function OrderCreateForm(props) {
             }
           });
           await API.graphql({
-            query: createOrder,
+            query: createOrder.replaceAll("__typename", ""),
             variables: {
               input: {
                 ...modelFields,
@@ -428,12 +389,8 @@ export default function OrderCreateForm(props) {
           if (onChange) {
             const modelFields = {
               orderNumber: value,
-              intakeDate,
-              status,
-              completed,
               customerID,
               deviceID,
-              teamID,
             };
             const result = onChange(modelFields);
             value = result?.orderNumber ?? value;
@@ -448,98 +405,6 @@ export default function OrderCreateForm(props) {
         hasError={errors.orderNumber?.hasError}
         {...getOverrideProps(overrides, "orderNumber")}
       ></TextField>
-      <TextField
-        label="Intake date"
-        isRequired={true}
-        isReadOnly={false}
-        type="datetime-local"
-        value={intakeDate && convertToLocal(new Date(intakeDate))}
-        onChange={(e) => {
-          let value =
-            e.target.value === "" ? "" : new Date(e.target.value).toISOString();
-          if (onChange) {
-            const modelFields = {
-              orderNumber,
-              intakeDate: value,
-              status,
-              completed,
-              customerID,
-              deviceID,
-              teamID,
-            };
-            const result = onChange(modelFields);
-            value = result?.intakeDate ?? value;
-          }
-          if (errors.intakeDate?.hasError) {
-            runValidationTasks("intakeDate", value);
-          }
-          setIntakeDate(value);
-        }}
-        onBlur={() => runValidationTasks("intakeDate", intakeDate)}
-        errorMessage={errors.intakeDate?.errorMessage}
-        hasError={errors.intakeDate?.hasError}
-        {...getOverrideProps(overrides, "intakeDate")}
-      ></TextField>
-      <TextField
-        label="Status"
-        isRequired={false}
-        isReadOnly={false}
-        value={status}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              orderNumber,
-              intakeDate,
-              status: value,
-              completed,
-              customerID,
-              deviceID,
-              teamID,
-            };
-            const result = onChange(modelFields);
-            value = result?.status ?? value;
-          }
-          if (errors.status?.hasError) {
-            runValidationTasks("status", value);
-          }
-          setStatus(value);
-        }}
-        onBlur={() => runValidationTasks("status", status)}
-        errorMessage={errors.status?.errorMessage}
-        hasError={errors.status?.hasError}
-        {...getOverrideProps(overrides, "status")}
-      ></TextField>
-      <SwitchField
-        label="Completed"
-        defaultChecked={false}
-        isDisabled={false}
-        isChecked={completed}
-        onChange={(e) => {
-          let value = e.target.checked;
-          if (onChange) {
-            const modelFields = {
-              orderNumber,
-              intakeDate,
-              status,
-              completed: value,
-              customerID,
-              deviceID,
-              teamID,
-            };
-            const result = onChange(modelFields);
-            value = result?.completed ?? value;
-          }
-          if (errors.completed?.hasError) {
-            runValidationTasks("completed", value);
-          }
-          setCompleted(value);
-        }}
-        onBlur={() => runValidationTasks("completed", completed)}
-        errorMessage={errors.completed?.errorMessage}
-        hasError={errors.completed?.hasError}
-        {...getOverrideProps(overrides, "completed")}
-      ></SwitchField>
       <ArrayField
         lengthLimit={1}
         onChange={async (items) => {
@@ -547,12 +412,8 @@ export default function OrderCreateForm(props) {
           if (onChange) {
             const modelFields = {
               orderNumber,
-              intakeDate,
-              status,
-              completed,
               customerID: value,
               deviceID,
-              teamID,
             };
             const result = onChange(modelFields);
             value = result?.customerID ?? value;
@@ -644,12 +505,8 @@ export default function OrderCreateForm(props) {
           if (onChange) {
             const modelFields = {
               orderNumber,
-              intakeDate,
-              status,
-              completed,
               customerID,
               deviceID: value,
-              teamID,
             };
             const result = onChange(modelFields);
             value = result?.deviceID ?? value;
@@ -732,36 +589,6 @@ export default function OrderCreateForm(props) {
           {...getOverrideProps(overrides, "deviceID")}
         ></Autocomplete>
       </ArrayField>
-      <TextField
-        label="Team id"
-        isRequired={false}
-        isReadOnly={false}
-        value={teamID}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              orderNumber,
-              intakeDate,
-              status,
-              completed,
-              customerID,
-              deviceID,
-              teamID: value,
-            };
-            const result = onChange(modelFields);
-            value = result?.teamID ?? value;
-          }
-          if (errors.teamID?.hasError) {
-            runValidationTasks("teamID", value);
-          }
-          setTeamID(value);
-        }}
-        onBlur={() => runValidationTasks("teamID", teamID)}
-        errorMessage={errors.teamID?.errorMessage}
-        hasError={errors.teamID?.hasError}
-        {...getOverrideProps(overrides, "teamID")}
-      ></TextField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

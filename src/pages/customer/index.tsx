@@ -7,6 +7,7 @@ import { GraphQLQuery } from "@aws-amplify/api";
 import { ListCustomersQuery } from "@/API";
 import { API } from "aws-amplify";
 import CustomerTable from "@/components/customer-table"
+import { currentUserSub } from "../api/helpers";
 
 export default function Customer() {
     const router = useRouter();
@@ -15,7 +16,23 @@ export default function Customer() {
     useEffect(()=> {
     async function grabCustomers(){
       const allCustomers = await API.graphql<GraphQLQuery<ListCustomersQuery>>({
-        query: queries.listCustomers,
+        query: 
+        `query currentUserCustomers {
+            listCustomers(filter: {teamID: {eq: "`+ await currentUserSub() + `"}}) {
+            items {
+              first
+              last
+              email
+              phone
+              Orders {
+                nextToken
+              }
+              Devices {
+                nextToken
+              }
+            }
+          }
+        }`,
       });
       setCustomer(allCustomers.data?.listCustomers?.items as CustomerTableValues[]);
     }

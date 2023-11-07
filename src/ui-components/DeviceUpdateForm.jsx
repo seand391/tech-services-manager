@@ -19,8 +19,7 @@ import {
   TextField,
   useTheme,
 } from "@aws-amplify/ui-react";
-import { getOverrideProps } from "@aws-amplify/ui-react/internal";
-import { fetchByPath, validateField } from "./utils";
+import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { API } from "aws-amplify";
 import { getDevice, listOrders } from "../graphql/queries";
 import { updateDevice, updateOrder } from "../graphql/mutations";
@@ -233,7 +232,7 @@ export default function DeviceUpdateForm(props) {
       const record = idProp
         ? (
             await API.graphql({
-              query: getDevice,
+              query: getDevice.replaceAll("__typename", ""),
               variables: { id: idProp },
             })
           )?.data?.getDevice
@@ -304,7 +303,7 @@ export default function DeviceUpdateForm(props) {
       }
       const result = (
         await API.graphql({
-          query: listOrders,
+          query: listOrders.replaceAll("__typename", ""),
           variables,
         })
       )?.data?.listOrders?.items;
@@ -399,7 +398,7 @@ export default function DeviceUpdateForm(props) {
             }
             promises.push(
               API.graphql({
-                query: updateOrder,
+                query: updateOrder.replaceAll("__typename", ""),
                 variables: {
                   input: {
                     id: original.id,
@@ -412,7 +411,7 @@ export default function DeviceUpdateForm(props) {
           ordersToLink.forEach((original) => {
             promises.push(
               API.graphql({
-                query: updateOrder,
+                query: updateOrder.replaceAll("__typename", ""),
                 variables: {
                   input: {
                     id: original.id,
@@ -431,7 +430,7 @@ export default function DeviceUpdateForm(props) {
           };
           promises.push(
             API.graphql({
-              query: updateDevice,
+              query: updateDevice.replaceAll("__typename", ""),
               variables: {
                 input: {
                   id: deviceRecord.id,
