@@ -16,13 +16,12 @@ import {
   Icon,
   ScrollView,
   Text,
-  TextField,
   useTheme,
 } from "@aws-amplify/ui-react";
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { API } from "aws-amplify";
-import { listCustomers, listDevices } from "../graphql/queries";
-import { createOrder } from "../graphql/mutations";
+import { listCustomers, listDevices, listServices } from "../graphql/queries";
+import { createOrder, createOrderService } from "../graphql/mutations";
 function ArrayField({
   items = [],
   onChange,
@@ -190,13 +189,10 @@ export default function OrderCreateForm(props) {
     ...rest
   } = props;
   const initialValues = {
-    orderNumber: "",
     customerID: undefined,
     deviceID: undefined,
+    Services: [],
   };
-  const [orderNumber, setOrderNumber] = React.useState(
-    initialValues.orderNumber
-  );
   const [customerID, setCustomerID] = React.useState(initialValues.customerID);
   const [customerIDLoading, setCustomerIDLoading] = React.useState(false);
   const [customerIDRecords, setCustomerIDRecords] = React.useState([]);
@@ -208,16 +204,21 @@ export default function OrderCreateForm(props) {
   const [selectedDeviceIDRecords, setSelectedDeviceIDRecords] = React.useState(
     []
   );
+  const [Services, setServices] = React.useState(initialValues.Services);
+  const [ServicesLoading, setServicesLoading] = React.useState(false);
+  const [ServicesRecords, setServicesRecords] = React.useState([]);
   const autocompleteLength = 10;
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
-    setOrderNumber(initialValues.orderNumber);
     setCustomerID(initialValues.customerID);
     setCurrentCustomerIDValue(undefined);
     setCurrentCustomerIDDisplayValue("");
     setDeviceID(initialValues.deviceID);
     setCurrentDeviceIDValue(undefined);
     setCurrentDeviceIDDisplayValue("");
+    setServices(initialValues.Services);
+    setCurrentServicesValue(undefined);
+    setCurrentServicesDisplayValue("");
     setErrors({});
   };
   const [currentCustomerIDDisplayValue, setCurrentCustomerIDDisplayValue] =
@@ -230,14 +231,28 @@ export default function OrderCreateForm(props) {
   const [currentDeviceIDValue, setCurrentDeviceIDValue] =
     React.useState(undefined);
   const deviceIDRef = React.createRef();
+  const [currentServicesDisplayValue, setCurrentServicesDisplayValue] =
+    React.useState("");
+  const [currentServicesValue, setCurrentServicesValue] =
+    React.useState(undefined);
+  const ServicesRef = React.createRef();
+  const getIDValue = {
+    Services: (r) => JSON.stringify({ id: r?.id }),
+  };
+  const ServicesIdSet = new Set(
+    Array.isArray(Services)
+      ? Services.map((r) => getIDValue.Services?.(r))
+      : getIDValue.Services?.(Services)
+  );
   const getDisplayValue = {
     customerID: (r) => `${r?.first ? r?.first + " - " : ""}${r?.id}`,
     deviceID: (r) => `${r?.type ? r?.type + " - " : ""}${r?.id}`,
+    Services: (r) => `${r?.name ? r?.name + " - " : ""}${r?.id}`,
   };
   const validations = {
-    orderNumber: [{ type: "Required" }],
     customerID: [{ type: "Required" }],
     deviceID: [{ type: "Required" }],
+    Services: [],
   };
   const runValidationTasks = async (
     fieldName,
@@ -310,9 +325,39 @@ export default function OrderCreateForm(props) {
     setDeviceIDRecords(newOptions.slice(0, autocompleteLength));
     setDeviceIDLoading(false);
   };
+  const fetchServicesRecords = async (value) => {
+    setServicesLoading(true);
+    const newOptions = [];
+    let newNext = "";
+    while (newOptions.length < autocompleteLength && newNext != null) {
+      const variables = {
+        limit: autocompleteLength * 5,
+        filter: {
+          or: [{ name: { contains: value } }, { id: { contains: value } }],
+        },
+      };
+      if (newNext) {
+        variables["nextToken"] = newNext;
+      }
+      const result = (
+        await API.graphql({
+          query: listServices.replaceAll("__typename", ""),
+          variables,
+        })
+      )?.data?.listServices?.items;
+      var loaded = result.filter(
+        (item) => !ServicesIdSet.has(getIDValue.Services?.(item))
+      );
+      newOptions.push(...loaded);
+      newNext = result.nextToken;
+    }
+    setServicesRecords(newOptions.slice(0, autocompleteLength));
+    setServicesLoading(false);
+  };
   React.useEffect(() => {
     fetchCustomerIDRecords("");
     fetchDeviceIDRecords("");
+    fetchServicesRecords("");
   }, []);
   return (
     <Grid
@@ -323,22 +368,30 @@ export default function OrderCreateForm(props) {
       onSubmit={async (event) => {
         event.preventDefault();
         let modelFields = {
-          orderNumber,
           customerID,
           deviceID,
+          Services,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
             if (Array.isArray(modelFields[fieldName])) {
               promises.push(
                 ...modelFields[fieldName].map((item) =>
-                  runValidationTasks(fieldName, item)
+                  runValidationTasks(
+                    fieldName,
+                    item,
+                    getDisplayValue[fieldName]
+                  )
                 )
               );
               return promises;
             }
             promises.push(
-              runValidationTasks(fieldName, modelFields[fieldName])
+              runValidationTasks(
+                fieldName,
+                modelFields[fieldName],
+                getDisplayValue[fieldName]
+              )
             );
             return promises;
           }, [])
@@ -355,14 +408,38 @@ export default function OrderCreateForm(props) {
               modelFields[key] = null;
             }
           });
-          await API.graphql({
-            query: createOrder.replaceAll("__typename", ""),
-            variables: {
-              input: {
-                ...modelFields,
+          const modelFieldsToSave = {
+            customerID: modelFields.customerID,
+            deviceID: modelFields.deviceID,
+          };
+          const order = (
+            await API.graphql({
+              query: createOrder.replaceAll("__typename", ""),
+              variables: {
+                input: {
+                  ...modelFieldsToSave,
+                },
               },
-            },
-          });
+            })
+          )?.data?.createOrder;
+          const promises = [];
+          promises.push(
+            ...Services.reduce((promises, service) => {
+              promises.push(
+                API.graphql({
+                  query: createOrderService.replaceAll("__typename", ""),
+                  variables: {
+                    input: {
+                      orderId: order.id,
+                      serviceId: service.id,
+                    },
+                  },
+                })
+              );
+              return promises;
+            }, [])
+          );
+          await Promise.all(promises);
           if (onSuccess) {
             onSuccess(modelFields);
           }
@@ -379,41 +456,15 @@ export default function OrderCreateForm(props) {
       {...getOverrideProps(overrides, "OrderCreateForm")}
       {...rest}
     >
-      <TextField
-        label="Order number"
-        isRequired={true}
-        isReadOnly={false}
-        value={orderNumber}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              orderNumber: value,
-              customerID,
-              deviceID,
-            };
-            const result = onChange(modelFields);
-            value = result?.orderNumber ?? value;
-          }
-          if (errors.orderNumber?.hasError) {
-            runValidationTasks("orderNumber", value);
-          }
-          setOrderNumber(value);
-        }}
-        onBlur={() => runValidationTasks("orderNumber", orderNumber)}
-        errorMessage={errors.orderNumber?.errorMessage}
-        hasError={errors.orderNumber?.hasError}
-        {...getOverrideProps(overrides, "orderNumber")}
-      ></TextField>
       <ArrayField
         lengthLimit={1}
         onChange={async (items) => {
           let value = items[0];
           if (onChange) {
             const modelFields = {
-              orderNumber,
               customerID: value,
               deviceID,
+              Services,
             };
             const result = onChange(modelFields);
             value = result?.customerID ?? value;
@@ -504,9 +555,9 @@ export default function OrderCreateForm(props) {
           let value = items[0];
           if (onChange) {
             const modelFields = {
-              orderNumber,
               customerID,
               deviceID: value,
+              Services,
             };
             const result = onChange(modelFields);
             value = result?.deviceID ?? value;
@@ -587,6 +638,84 @@ export default function OrderCreateForm(props) {
           ref={deviceIDRef}
           labelHidden={true}
           {...getOverrideProps(overrides, "deviceID")}
+        ></Autocomplete>
+      </ArrayField>
+      <ArrayField
+        onChange={async (items) => {
+          let values = items;
+          if (onChange) {
+            const modelFields = {
+              customerID,
+              deviceID,
+              Services: values,
+            };
+            const result = onChange(modelFields);
+            values = result?.Services ?? values;
+          }
+          setServices(values);
+          setCurrentServicesValue(undefined);
+          setCurrentServicesDisplayValue("");
+        }}
+        currentFieldValue={currentServicesValue}
+        label={"Services"}
+        items={Services}
+        hasError={errors?.Services?.hasError}
+        runValidationTasks={async () =>
+          await runValidationTasks("Services", currentServicesValue)
+        }
+        errorMessage={errors?.Services?.errorMessage}
+        getBadgeText={getDisplayValue.Services}
+        setFieldValue={(model) => {
+          setCurrentServicesDisplayValue(
+            model ? getDisplayValue.Services(model) : ""
+          );
+          setCurrentServicesValue(model);
+        }}
+        inputFieldRef={ServicesRef}
+        defaultFieldValue={""}
+      >
+        <Autocomplete
+          label="Services"
+          isRequired={false}
+          isReadOnly={false}
+          placeholder="Search Service"
+          value={currentServicesDisplayValue}
+          options={ServicesRecords.map((r) => ({
+            id: getIDValue.Services?.(r),
+            label: getDisplayValue.Services?.(r),
+          }))}
+          isLoading={ServicesLoading}
+          onSelect={({ id, label }) => {
+            setCurrentServicesValue(
+              ServicesRecords.find((r) =>
+                Object.entries(JSON.parse(id)).every(
+                  ([key, value]) => r[key] === value
+                )
+              )
+            );
+            setCurrentServicesDisplayValue(label);
+            runValidationTasks("Services", label);
+          }}
+          onClear={() => {
+            setCurrentServicesDisplayValue("");
+          }}
+          onChange={(e) => {
+            let { value } = e.target;
+            fetchServicesRecords(value);
+            if (errors.Services?.hasError) {
+              runValidationTasks("Services", value);
+            }
+            setCurrentServicesDisplayValue(value);
+            setCurrentServicesValue(undefined);
+          }}
+          onBlur={() =>
+            runValidationTasks("Services", currentServicesDisplayValue)
+          }
+          errorMessage={errors.Services?.errorMessage}
+          hasError={errors.Services?.hasError}
+          ref={ServicesRef}
+          labelHidden={true}
+          {...getOverrideProps(overrides, "Services")}
         ></Autocomplete>
       </ArrayField>
       <Flex

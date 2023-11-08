@@ -2,24 +2,20 @@
 /* eslint-disable */
 //  This file was automatically generated and should not be edited.
 
-export type CreateCustomerInput = {
+export type CreateServiceInput = {
   id?: string | null,
-  first: string,
-  last: string,
-  phone: string,
-  email?: string | null,
+  name: string,
+  price: string,
   teamID?: string | null,
 };
 
-export type ModelCustomerConditionInput = {
-  first?: ModelStringInput | null,
-  last?: ModelStringInput | null,
-  phone?: ModelStringInput | null,
-  email?: ModelStringInput | null,
+export type ModelServiceConditionInput = {
+  name?: ModelStringInput | null,
+  price?: ModelStringInput | null,
   teamID?: ModelIDInput | null,
-  and?: Array< ModelCustomerConditionInput | null > | null,
-  or?: Array< ModelCustomerConditionInput | null > | null,
-  not?: ModelCustomerConditionInput | null,
+  and?: Array< ModelServiceConditionInput | null > | null,
+  or?: Array< ModelServiceConditionInput | null > | null,
+  not?: ModelServiceConditionInput | null,
 };
 
 export type ModelStringInput = {
@@ -78,6 +74,128 @@ export type ModelIDInput = {
   size?: ModelSizeInput | null,
 };
 
+export type Service = {
+  __typename: "Service",
+  id: string,
+  name: string,
+  price: string,
+  teamID?: string | null,
+  orders?: ModelOrderServiceConnection | null,
+  createdAt: string,
+  updatedAt: string,
+};
+
+export type ModelOrderServiceConnection = {
+  __typename: "ModelOrderServiceConnection",
+  items:  Array<OrderService | null >,
+  nextToken?: string | null,
+};
+
+export type OrderService = {
+  __typename: "OrderService",
+  id: string,
+  serviceId: string,
+  orderId: string,
+  service: Service,
+  order: Order,
+  createdAt: string,
+  updatedAt: string,
+};
+
+export type Order = {
+  __typename: "Order",
+  id: string,
+  intakeDate: string,
+  pickupDate?: string | null,
+  completed: boolean,
+  customerID: string,
+  deviceID: string,
+  teamID?: string | null,
+  Notes?: ModelNoteConnection | null,
+  Services?: ModelOrderServiceConnection | null,
+  status?: string | null,
+  createdAt: string,
+  updatedAt: string,
+};
+
+export type ModelNoteConnection = {
+  __typename: "ModelNoteConnection",
+  items:  Array<Note | null >,
+  nextToken?: string | null,
+};
+
+export type Note = {
+  __typename: "Note",
+  id: string,
+  text: string,
+  orderID: string,
+  date: string,
+  author: string,
+  createdAt: string,
+  updatedAt: string,
+};
+
+export type UpdateServiceInput = {
+  id: string,
+  name?: string | null,
+  price?: string | null,
+  teamID?: string | null,
+};
+
+export type DeleteServiceInput = {
+  id: string,
+};
+
+export type CreateNoteInput = {
+  id?: string | null,
+  text: string,
+  orderID: string,
+  date: string,
+  author: string,
+};
+
+export type ModelNoteConditionInput = {
+  text?: ModelStringInput | null,
+  orderID?: ModelIDInput | null,
+  date?: ModelStringInput | null,
+  author?: ModelStringInput | null,
+  and?: Array< ModelNoteConditionInput | null > | null,
+  or?: Array< ModelNoteConditionInput | null > | null,
+  not?: ModelNoteConditionInput | null,
+};
+
+export type UpdateNoteInput = {
+  id: string,
+  text?: string | null,
+  orderID?: string | null,
+  date?: string | null,
+  author?: string | null,
+};
+
+export type DeleteNoteInput = {
+  id: string,
+};
+
+export type CreateCustomerInput = {
+  id?: string | null,
+  first: string,
+  last: string,
+  phone: string,
+  email?: string | null,
+  teamID?: string | null,
+};
+
+export type ModelCustomerConditionInput = {
+  first?: ModelStringInput | null,
+  last?: ModelStringInput | null,
+  phone?: ModelStringInput | null,
+  email?: ModelStringInput | null,
+  teamID?: ModelIDInput | null,
+  and?: Array< ModelCustomerConditionInput | null > | null,
+  or?: Array< ModelCustomerConditionInput | null > | null,
+  not?: ModelCustomerConditionInput | null,
+};
+
 export type Customer = {
   __typename: "Customer",
   id: string,
@@ -96,20 +214,6 @@ export type ModelOrderConnection = {
   __typename: "ModelOrderConnection",
   items:  Array<Order | null >,
   nextToken?: string | null,
-};
-
-export type Order = {
-  __typename: "Order",
-  id: string,
-  orderNumber: string,
-  intakeDate: string,
-  status?: string | null,
-  completed: boolean,
-  customerID: string,
-  deviceID: string,
-  teamID?: string | null,
-  createdAt: string,
-  updatedAt: string,
 };
 
 export type UpdateCustomerInput = {
@@ -173,23 +277,23 @@ export type DeleteDeviceInput = {
 
 export type CreateOrderInput = {
   id?: string | null,
-  orderNumber: string,
   intakeDate: string,
-  status?: string | null,
+  pickupDate?: string | null,
   completed: boolean,
   customerID: string,
   deviceID: string,
   teamID?: string | null,
+  status?: string | null,
 };
 
 export type ModelOrderConditionInput = {
-  orderNumber?: ModelStringInput | null,
   intakeDate?: ModelStringInput | null,
-  status?: ModelStringInput | null,
+  pickupDate?: ModelStringInput | null,
   completed?: ModelBooleanInput | null,
   customerID?: ModelIDInput | null,
   deviceID?: ModelIDInput | null,
   teamID?: ModelIDInput | null,
+  status?: ModelStringInput | null,
   and?: Array< ModelOrderConditionInput | null > | null,
   or?: Array< ModelOrderConditionInput | null > | null,
   not?: ModelOrderConditionInput | null,
@@ -204,18 +308,75 @@ export type ModelBooleanInput = {
 
 export type UpdateOrderInput = {
   id: string,
-  orderNumber?: string | null,
   intakeDate?: string | null,
-  status?: string | null,
+  pickupDate?: string | null,
   completed?: boolean | null,
   customerID?: string | null,
   deviceID?: string | null,
   teamID?: string | null,
+  status?: string | null,
 };
 
 export type DeleteOrderInput = {
   id: string,
 };
+
+export type CreateOrderServiceInput = {
+  id?: string | null,
+  serviceId: string,
+  orderId: string,
+};
+
+export type ModelOrderServiceConditionInput = {
+  serviceId?: ModelIDInput | null,
+  orderId?: ModelIDInput | null,
+  and?: Array< ModelOrderServiceConditionInput | null > | null,
+  or?: Array< ModelOrderServiceConditionInput | null > | null,
+  not?: ModelOrderServiceConditionInput | null,
+};
+
+export type UpdateOrderServiceInput = {
+  id: string,
+  serviceId?: string | null,
+  orderId?: string | null,
+};
+
+export type DeleteOrderServiceInput = {
+  id: string,
+};
+
+export type ModelServiceFilterInput = {
+  id?: ModelIDInput | null,
+  name?: ModelStringInput | null,
+  price?: ModelStringInput | null,
+  teamID?: ModelIDInput | null,
+  and?: Array< ModelServiceFilterInput | null > | null,
+  or?: Array< ModelServiceFilterInput | null > | null,
+  not?: ModelServiceFilterInput | null,
+};
+
+export type ModelServiceConnection = {
+  __typename: "ModelServiceConnection",
+  items:  Array<Service | null >,
+  nextToken?: string | null,
+};
+
+export type ModelNoteFilterInput = {
+  id?: ModelIDInput | null,
+  text?: ModelStringInput | null,
+  orderID?: ModelIDInput | null,
+  date?: ModelStringInput | null,
+  author?: ModelStringInput | null,
+  and?: Array< ModelNoteFilterInput | null > | null,
+  or?: Array< ModelNoteFilterInput | null > | null,
+  not?: ModelNoteFilterInput | null,
+};
+
+export enum ModelSortDirection {
+  ASC = "ASC",
+  DESC = "DESC",
+}
+
 
 export type ModelCustomerFilterInput = {
   id?: ModelIDInput | null,
@@ -253,35 +414,36 @@ export type ModelDeviceConnection = {
   nextToken?: string | null,
 };
 
-export enum ModelSortDirection {
-  ASC = "ASC",
-  DESC = "DESC",
-}
-
-
 export type ModelOrderFilterInput = {
   id?: ModelIDInput | null,
-  orderNumber?: ModelStringInput | null,
   intakeDate?: ModelStringInput | null,
-  status?: ModelStringInput | null,
+  pickupDate?: ModelStringInput | null,
   completed?: ModelBooleanInput | null,
   customerID?: ModelIDInput | null,
   deviceID?: ModelIDInput | null,
   teamID?: ModelIDInput | null,
+  status?: ModelStringInput | null,
   and?: Array< ModelOrderFilterInput | null > | null,
   or?: Array< ModelOrderFilterInput | null > | null,
   not?: ModelOrderFilterInput | null,
 };
 
-export type ModelSubscriptionCustomerFilterInput = {
+export type ModelOrderServiceFilterInput = {
+  id?: ModelIDInput | null,
+  serviceId?: ModelIDInput | null,
+  orderId?: ModelIDInput | null,
+  and?: Array< ModelOrderServiceFilterInput | null > | null,
+  or?: Array< ModelOrderServiceFilterInput | null > | null,
+  not?: ModelOrderServiceFilterInput | null,
+};
+
+export type ModelSubscriptionServiceFilterInput = {
   id?: ModelSubscriptionIDInput | null,
-  first?: ModelSubscriptionStringInput | null,
-  last?: ModelSubscriptionStringInput | null,
-  phone?: ModelSubscriptionStringInput | null,
-  email?: ModelSubscriptionStringInput | null,
+  name?: ModelSubscriptionStringInput | null,
+  price?: ModelSubscriptionStringInput | null,
   teamID?: ModelSubscriptionIDInput | null,
-  and?: Array< ModelSubscriptionCustomerFilterInput | null > | null,
-  or?: Array< ModelSubscriptionCustomerFilterInput | null > | null,
+  and?: Array< ModelSubscriptionServiceFilterInput | null > | null,
+  or?: Array< ModelSubscriptionServiceFilterInput | null > | null,
 };
 
 export type ModelSubscriptionIDInput = {
@@ -314,6 +476,27 @@ export type ModelSubscriptionStringInput = {
   notIn?: Array< string | null > | null,
 };
 
+export type ModelSubscriptionNoteFilterInput = {
+  id?: ModelSubscriptionIDInput | null,
+  text?: ModelSubscriptionStringInput | null,
+  orderID?: ModelSubscriptionIDInput | null,
+  date?: ModelSubscriptionStringInput | null,
+  author?: ModelSubscriptionStringInput | null,
+  and?: Array< ModelSubscriptionNoteFilterInput | null > | null,
+  or?: Array< ModelSubscriptionNoteFilterInput | null > | null,
+};
+
+export type ModelSubscriptionCustomerFilterInput = {
+  id?: ModelSubscriptionIDInput | null,
+  first?: ModelSubscriptionStringInput | null,
+  last?: ModelSubscriptionStringInput | null,
+  phone?: ModelSubscriptionStringInput | null,
+  email?: ModelSubscriptionStringInput | null,
+  teamID?: ModelSubscriptionIDInput | null,
+  and?: Array< ModelSubscriptionCustomerFilterInput | null > | null,
+  or?: Array< ModelSubscriptionCustomerFilterInput | null > | null,
+};
+
 export type ModelSubscriptionDeviceFilterInput = {
   id?: ModelSubscriptionIDInput | null,
   type?: ModelSubscriptionStringInput | null,
@@ -327,13 +510,13 @@ export type ModelSubscriptionDeviceFilterInput = {
 
 export type ModelSubscriptionOrderFilterInput = {
   id?: ModelSubscriptionIDInput | null,
-  orderNumber?: ModelSubscriptionStringInput | null,
   intakeDate?: ModelSubscriptionStringInput | null,
-  status?: ModelSubscriptionStringInput | null,
+  pickupDate?: ModelSubscriptionStringInput | null,
   completed?: ModelSubscriptionBooleanInput | null,
   customerID?: ModelSubscriptionIDInput | null,
   deviceID?: ModelSubscriptionIDInput | null,
   teamID?: ModelSubscriptionIDInput | null,
+  status?: ModelSubscriptionStringInput | null,
   and?: Array< ModelSubscriptionOrderFilterInput | null > | null,
   or?: Array< ModelSubscriptionOrderFilterInput | null > | null,
 };
@@ -341,6 +524,155 @@ export type ModelSubscriptionOrderFilterInput = {
 export type ModelSubscriptionBooleanInput = {
   ne?: boolean | null,
   eq?: boolean | null,
+};
+
+export type ModelSubscriptionOrderServiceFilterInput = {
+  id?: ModelSubscriptionIDInput | null,
+  serviceId?: ModelSubscriptionIDInput | null,
+  orderId?: ModelSubscriptionIDInput | null,
+  and?: Array< ModelSubscriptionOrderServiceFilterInput | null > | null,
+  or?: Array< ModelSubscriptionOrderServiceFilterInput | null > | null,
+};
+
+export type CreateServiceMutationVariables = {
+  input: CreateServiceInput,
+  condition?: ModelServiceConditionInput | null,
+};
+
+export type CreateServiceMutation = {
+  createService?:  {
+    __typename: "Service",
+    id: string,
+    name: string,
+    price: string,
+    teamID?: string | null,
+    orders?:  {
+      __typename: "ModelOrderServiceConnection",
+      items:  Array< {
+        __typename: "OrderService",
+        id: string,
+        serviceId: string,
+        orderId: string,
+        createdAt: string,
+        updatedAt: string,
+      } | null >,
+      nextToken?: string | null,
+    } | null,
+    createdAt: string,
+    updatedAt: string,
+  } | null,
+};
+
+export type UpdateServiceMutationVariables = {
+  input: UpdateServiceInput,
+  condition?: ModelServiceConditionInput | null,
+};
+
+export type UpdateServiceMutation = {
+  updateService?:  {
+    __typename: "Service",
+    id: string,
+    name: string,
+    price: string,
+    teamID?: string | null,
+    orders?:  {
+      __typename: "ModelOrderServiceConnection",
+      items:  Array< {
+        __typename: "OrderService",
+        id: string,
+        serviceId: string,
+        orderId: string,
+        createdAt: string,
+        updatedAt: string,
+      } | null >,
+      nextToken?: string | null,
+    } | null,
+    createdAt: string,
+    updatedAt: string,
+  } | null,
+};
+
+export type DeleteServiceMutationVariables = {
+  input: DeleteServiceInput,
+  condition?: ModelServiceConditionInput | null,
+};
+
+export type DeleteServiceMutation = {
+  deleteService?:  {
+    __typename: "Service",
+    id: string,
+    name: string,
+    price: string,
+    teamID?: string | null,
+    orders?:  {
+      __typename: "ModelOrderServiceConnection",
+      items:  Array< {
+        __typename: "OrderService",
+        id: string,
+        serviceId: string,
+        orderId: string,
+        createdAt: string,
+        updatedAt: string,
+      } | null >,
+      nextToken?: string | null,
+    } | null,
+    createdAt: string,
+    updatedAt: string,
+  } | null,
+};
+
+export type CreateNoteMutationVariables = {
+  input: CreateNoteInput,
+  condition?: ModelNoteConditionInput | null,
+};
+
+export type CreateNoteMutation = {
+  createNote?:  {
+    __typename: "Note",
+    id: string,
+    text: string,
+    orderID: string,
+    date: string,
+    author: string,
+    createdAt: string,
+    updatedAt: string,
+  } | null,
+};
+
+export type UpdateNoteMutationVariables = {
+  input: UpdateNoteInput,
+  condition?: ModelNoteConditionInput | null,
+};
+
+export type UpdateNoteMutation = {
+  updateNote?:  {
+    __typename: "Note",
+    id: string,
+    text: string,
+    orderID: string,
+    date: string,
+    author: string,
+    createdAt: string,
+    updatedAt: string,
+  } | null,
+};
+
+export type DeleteNoteMutationVariables = {
+  input: DeleteNoteInput,
+  condition?: ModelNoteConditionInput | null,
+};
+
+export type DeleteNoteMutation = {
+  deleteNote?:  {
+    __typename: "Note",
+    id: string,
+    text: string,
+    orderID: string,
+    date: string,
+    author: string,
+    createdAt: string,
+    updatedAt: string,
+  } | null,
 };
 
 export type CreateCustomerMutationVariables = {
@@ -361,13 +693,13 @@ export type CreateCustomerMutation = {
       items:  Array< {
         __typename: "Order",
         id: string,
-        orderNumber: string,
         intakeDate: string,
-        status?: string | null,
+        pickupDate?: string | null,
         completed: boolean,
         customerID: string,
         deviceID: string,
         teamID?: string | null,
+        status?: string | null,
         createdAt: string,
         updatedAt: string,
       } | null >,
@@ -378,13 +710,13 @@ export type CreateCustomerMutation = {
       items:  Array< {
         __typename: "Order",
         id: string,
-        orderNumber: string,
         intakeDate: string,
-        status?: string | null,
+        pickupDate?: string | null,
         completed: boolean,
         customerID: string,
         deviceID: string,
         teamID?: string | null,
+        status?: string | null,
         createdAt: string,
         updatedAt: string,
       } | null >,
@@ -414,13 +746,13 @@ export type UpdateCustomerMutation = {
       items:  Array< {
         __typename: "Order",
         id: string,
-        orderNumber: string,
         intakeDate: string,
-        status?: string | null,
+        pickupDate?: string | null,
         completed: boolean,
         customerID: string,
         deviceID: string,
         teamID?: string | null,
+        status?: string | null,
         createdAt: string,
         updatedAt: string,
       } | null >,
@@ -431,13 +763,13 @@ export type UpdateCustomerMutation = {
       items:  Array< {
         __typename: "Order",
         id: string,
-        orderNumber: string,
         intakeDate: string,
-        status?: string | null,
+        pickupDate?: string | null,
         completed: boolean,
         customerID: string,
         deviceID: string,
         teamID?: string | null,
+        status?: string | null,
         createdAt: string,
         updatedAt: string,
       } | null >,
@@ -467,13 +799,13 @@ export type DeleteCustomerMutation = {
       items:  Array< {
         __typename: "Order",
         id: string,
-        orderNumber: string,
         intakeDate: string,
-        status?: string | null,
+        pickupDate?: string | null,
         completed: boolean,
         customerID: string,
         deviceID: string,
         teamID?: string | null,
+        status?: string | null,
         createdAt: string,
         updatedAt: string,
       } | null >,
@@ -484,13 +816,13 @@ export type DeleteCustomerMutation = {
       items:  Array< {
         __typename: "Order",
         id: string,
-        orderNumber: string,
         intakeDate: string,
-        status?: string | null,
+        pickupDate?: string | null,
         completed: boolean,
         customerID: string,
         deviceID: string,
         teamID?: string | null,
+        status?: string | null,
         createdAt: string,
         updatedAt: string,
       } | null >,
@@ -521,13 +853,13 @@ export type CreateDeviceMutation = {
       items:  Array< {
         __typename: "Order",
         id: string,
-        orderNumber: string,
         intakeDate: string,
-        status?: string | null,
+        pickupDate?: string | null,
         completed: boolean,
         customerID: string,
         deviceID: string,
         teamID?: string | null,
+        status?: string | null,
         createdAt: string,
         updatedAt: string,
       } | null >,
@@ -557,13 +889,13 @@ export type UpdateDeviceMutation = {
       items:  Array< {
         __typename: "Order",
         id: string,
-        orderNumber: string,
         intakeDate: string,
-        status?: string | null,
+        pickupDate?: string | null,
         completed: boolean,
         customerID: string,
         deviceID: string,
         teamID?: string | null,
+        status?: string | null,
         createdAt: string,
         updatedAt: string,
       } | null >,
@@ -593,13 +925,13 @@ export type DeleteDeviceMutation = {
       items:  Array< {
         __typename: "Order",
         id: string,
-        orderNumber: string,
         intakeDate: string,
-        status?: string | null,
+        pickupDate?: string | null,
         completed: boolean,
         customerID: string,
         deviceID: string,
         teamID?: string | null,
+        status?: string | null,
         createdAt: string,
         updatedAt: string,
       } | null >,
@@ -619,13 +951,39 @@ export type CreateOrderMutation = {
   createOrder?:  {
     __typename: "Order",
     id: string,
-    orderNumber: string,
     intakeDate: string,
-    status?: string | null,
+    pickupDate?: string | null,
     completed: boolean,
     customerID: string,
     deviceID: string,
     teamID?: string | null,
+    Notes?:  {
+      __typename: "ModelNoteConnection",
+      items:  Array< {
+        __typename: "Note",
+        id: string,
+        text: string,
+        orderID: string,
+        date: string,
+        author: string,
+        createdAt: string,
+        updatedAt: string,
+      } | null >,
+      nextToken?: string | null,
+    } | null,
+    Services?:  {
+      __typename: "ModelOrderServiceConnection",
+      items:  Array< {
+        __typename: "OrderService",
+        id: string,
+        serviceId: string,
+        orderId: string,
+        createdAt: string,
+        updatedAt: string,
+      } | null >,
+      nextToken?: string | null,
+    } | null,
+    status?: string | null,
     createdAt: string,
     updatedAt: string,
   } | null,
@@ -640,13 +998,39 @@ export type UpdateOrderMutation = {
   updateOrder?:  {
     __typename: "Order",
     id: string,
-    orderNumber: string,
     intakeDate: string,
-    status?: string | null,
+    pickupDate?: string | null,
     completed: boolean,
     customerID: string,
     deviceID: string,
     teamID?: string | null,
+    Notes?:  {
+      __typename: "ModelNoteConnection",
+      items:  Array< {
+        __typename: "Note",
+        id: string,
+        text: string,
+        orderID: string,
+        date: string,
+        author: string,
+        createdAt: string,
+        updatedAt: string,
+      } | null >,
+      nextToken?: string | null,
+    } | null,
+    Services?:  {
+      __typename: "ModelOrderServiceConnection",
+      items:  Array< {
+        __typename: "OrderService",
+        id: string,
+        serviceId: string,
+        orderId: string,
+        createdAt: string,
+        updatedAt: string,
+      } | null >,
+      nextToken?: string | null,
+    } | null,
+    status?: string | null,
     createdAt: string,
     updatedAt: string,
   } | null,
@@ -661,15 +1045,310 @@ export type DeleteOrderMutation = {
   deleteOrder?:  {
     __typename: "Order",
     id: string,
-    orderNumber: string,
     intakeDate: string,
-    status?: string | null,
+    pickupDate?: string | null,
     completed: boolean,
     customerID: string,
     deviceID: string,
     teamID?: string | null,
+    Notes?:  {
+      __typename: "ModelNoteConnection",
+      items:  Array< {
+        __typename: "Note",
+        id: string,
+        text: string,
+        orderID: string,
+        date: string,
+        author: string,
+        createdAt: string,
+        updatedAt: string,
+      } | null >,
+      nextToken?: string | null,
+    } | null,
+    Services?:  {
+      __typename: "ModelOrderServiceConnection",
+      items:  Array< {
+        __typename: "OrderService",
+        id: string,
+        serviceId: string,
+        orderId: string,
+        createdAt: string,
+        updatedAt: string,
+      } | null >,
+      nextToken?: string | null,
+    } | null,
+    status?: string | null,
     createdAt: string,
     updatedAt: string,
+  } | null,
+};
+
+export type CreateOrderServiceMutationVariables = {
+  input: CreateOrderServiceInput,
+  condition?: ModelOrderServiceConditionInput | null,
+};
+
+export type CreateOrderServiceMutation = {
+  createOrderService?:  {
+    __typename: "OrderService",
+    id: string,
+    serviceId: string,
+    orderId: string,
+    service:  {
+      __typename: "Service",
+      id: string,
+      name: string,
+      price: string,
+      teamID?: string | null,
+      orders?:  {
+        __typename: "ModelOrderServiceConnection",
+        nextToken?: string | null,
+      } | null,
+      createdAt: string,
+      updatedAt: string,
+    },
+    order:  {
+      __typename: "Order",
+      id: string,
+      intakeDate: string,
+      pickupDate?: string | null,
+      completed: boolean,
+      customerID: string,
+      deviceID: string,
+      teamID?: string | null,
+      Notes?:  {
+        __typename: "ModelNoteConnection",
+        nextToken?: string | null,
+      } | null,
+      Services?:  {
+        __typename: "ModelOrderServiceConnection",
+        nextToken?: string | null,
+      } | null,
+      status?: string | null,
+      createdAt: string,
+      updatedAt: string,
+    },
+    createdAt: string,
+    updatedAt: string,
+  } | null,
+};
+
+export type UpdateOrderServiceMutationVariables = {
+  input: UpdateOrderServiceInput,
+  condition?: ModelOrderServiceConditionInput | null,
+};
+
+export type UpdateOrderServiceMutation = {
+  updateOrderService?:  {
+    __typename: "OrderService",
+    id: string,
+    serviceId: string,
+    orderId: string,
+    service:  {
+      __typename: "Service",
+      id: string,
+      name: string,
+      price: string,
+      teamID?: string | null,
+      orders?:  {
+        __typename: "ModelOrderServiceConnection",
+        nextToken?: string | null,
+      } | null,
+      createdAt: string,
+      updatedAt: string,
+    },
+    order:  {
+      __typename: "Order",
+      id: string,
+      intakeDate: string,
+      pickupDate?: string | null,
+      completed: boolean,
+      customerID: string,
+      deviceID: string,
+      teamID?: string | null,
+      Notes?:  {
+        __typename: "ModelNoteConnection",
+        nextToken?: string | null,
+      } | null,
+      Services?:  {
+        __typename: "ModelOrderServiceConnection",
+        nextToken?: string | null,
+      } | null,
+      status?: string | null,
+      createdAt: string,
+      updatedAt: string,
+    },
+    createdAt: string,
+    updatedAt: string,
+  } | null,
+};
+
+export type DeleteOrderServiceMutationVariables = {
+  input: DeleteOrderServiceInput,
+  condition?: ModelOrderServiceConditionInput | null,
+};
+
+export type DeleteOrderServiceMutation = {
+  deleteOrderService?:  {
+    __typename: "OrderService",
+    id: string,
+    serviceId: string,
+    orderId: string,
+    service:  {
+      __typename: "Service",
+      id: string,
+      name: string,
+      price: string,
+      teamID?: string | null,
+      orders?:  {
+        __typename: "ModelOrderServiceConnection",
+        nextToken?: string | null,
+      } | null,
+      createdAt: string,
+      updatedAt: string,
+    },
+    order:  {
+      __typename: "Order",
+      id: string,
+      intakeDate: string,
+      pickupDate?: string | null,
+      completed: boolean,
+      customerID: string,
+      deviceID: string,
+      teamID?: string | null,
+      Notes?:  {
+        __typename: "ModelNoteConnection",
+        nextToken?: string | null,
+      } | null,
+      Services?:  {
+        __typename: "ModelOrderServiceConnection",
+        nextToken?: string | null,
+      } | null,
+      status?: string | null,
+      createdAt: string,
+      updatedAt: string,
+    },
+    createdAt: string,
+    updatedAt: string,
+  } | null,
+};
+
+export type GetServiceQueryVariables = {
+  id: string,
+};
+
+export type GetServiceQuery = {
+  getService?:  {
+    __typename: "Service",
+    id: string,
+    name: string,
+    price: string,
+    teamID?: string | null,
+    orders?:  {
+      __typename: "ModelOrderServiceConnection",
+      items:  Array< {
+        __typename: "OrderService",
+        id: string,
+        serviceId: string,
+        orderId: string,
+        createdAt: string,
+        updatedAt: string,
+      } | null >,
+      nextToken?: string | null,
+    } | null,
+    createdAt: string,
+    updatedAt: string,
+  } | null,
+};
+
+export type ListServicesQueryVariables = {
+  filter?: ModelServiceFilterInput | null,
+  limit?: number | null,
+  nextToken?: string | null,
+};
+
+export type ListServicesQuery = {
+  listServices?:  {
+    __typename: "ModelServiceConnection",
+    items:  Array< {
+      __typename: "Service",
+      id: string,
+      name: string,
+      price: string,
+      teamID?: string | null,
+      orders?:  {
+        __typename: "ModelOrderServiceConnection",
+        nextToken?: string | null,
+      } | null,
+      createdAt: string,
+      updatedAt: string,
+    } | null >,
+    nextToken?: string | null,
+  } | null,
+};
+
+export type GetNoteQueryVariables = {
+  id: string,
+};
+
+export type GetNoteQuery = {
+  getNote?:  {
+    __typename: "Note",
+    id: string,
+    text: string,
+    orderID: string,
+    date: string,
+    author: string,
+    createdAt: string,
+    updatedAt: string,
+  } | null,
+};
+
+export type ListNotesQueryVariables = {
+  filter?: ModelNoteFilterInput | null,
+  limit?: number | null,
+  nextToken?: string | null,
+};
+
+export type ListNotesQuery = {
+  listNotes?:  {
+    __typename: "ModelNoteConnection",
+    items:  Array< {
+      __typename: "Note",
+      id: string,
+      text: string,
+      orderID: string,
+      date: string,
+      author: string,
+      createdAt: string,
+      updatedAt: string,
+    } | null >,
+    nextToken?: string | null,
+  } | null,
+};
+
+export type NotesByOrderIDQueryVariables = {
+  orderID: string,
+  sortDirection?: ModelSortDirection | null,
+  filter?: ModelNoteFilterInput | null,
+  limit?: number | null,
+  nextToken?: string | null,
+};
+
+export type NotesByOrderIDQuery = {
+  notesByOrderID?:  {
+    __typename: "ModelNoteConnection",
+    items:  Array< {
+      __typename: "Note",
+      id: string,
+      text: string,
+      orderID: string,
+      date: string,
+      author: string,
+      createdAt: string,
+      updatedAt: string,
+    } | null >,
+    nextToken?: string | null,
   } | null,
 };
 
@@ -690,13 +1369,13 @@ export type GetCustomerQuery = {
       items:  Array< {
         __typename: "Order",
         id: string,
-        orderNumber: string,
         intakeDate: string,
-        status?: string | null,
+        pickupDate?: string | null,
         completed: boolean,
         customerID: string,
         deviceID: string,
         teamID?: string | null,
+        status?: string | null,
         createdAt: string,
         updatedAt: string,
       } | null >,
@@ -707,13 +1386,13 @@ export type GetCustomerQuery = {
       items:  Array< {
         __typename: "Order",
         id: string,
-        orderNumber: string,
         intakeDate: string,
-        status?: string | null,
+        pickupDate?: string | null,
         completed: boolean,
         customerID: string,
         deviceID: string,
         teamID?: string | null,
+        status?: string | null,
         createdAt: string,
         updatedAt: string,
       } | null >,
@@ -775,13 +1454,13 @@ export type GetDeviceQuery = {
       items:  Array< {
         __typename: "Order",
         id: string,
-        orderNumber: string,
         intakeDate: string,
-        status?: string | null,
+        pickupDate?: string | null,
         completed: boolean,
         customerID: string,
         deviceID: string,
         teamID?: string | null,
+        status?: string | null,
         createdAt: string,
         updatedAt: string,
       } | null >,
@@ -858,13 +1537,39 @@ export type GetOrderQuery = {
   getOrder?:  {
     __typename: "Order",
     id: string,
-    orderNumber: string,
     intakeDate: string,
-    status?: string | null,
+    pickupDate?: string | null,
     completed: boolean,
     customerID: string,
     deviceID: string,
     teamID?: string | null,
+    Notes?:  {
+      __typename: "ModelNoteConnection",
+      items:  Array< {
+        __typename: "Note",
+        id: string,
+        text: string,
+        orderID: string,
+        date: string,
+        author: string,
+        createdAt: string,
+        updatedAt: string,
+      } | null >,
+      nextToken?: string | null,
+    } | null,
+    Services?:  {
+      __typename: "ModelOrderServiceConnection",
+      items:  Array< {
+        __typename: "OrderService",
+        id: string,
+        serviceId: string,
+        orderId: string,
+        createdAt: string,
+        updatedAt: string,
+      } | null >,
+      nextToken?: string | null,
+    } | null,
+    status?: string | null,
     createdAt: string,
     updatedAt: string,
   } | null,
@@ -882,13 +1587,21 @@ export type ListOrdersQuery = {
     items:  Array< {
       __typename: "Order",
       id: string,
-      orderNumber: string,
       intakeDate: string,
-      status?: string | null,
+      pickupDate?: string | null,
       completed: boolean,
       customerID: string,
       deviceID: string,
       teamID?: string | null,
+      Notes?:  {
+        __typename: "ModelNoteConnection",
+        nextToken?: string | null,
+      } | null,
+      Services?:  {
+        __typename: "ModelOrderServiceConnection",
+        nextToken?: string | null,
+      } | null,
+      status?: string | null,
       createdAt: string,
       updatedAt: string,
     } | null >,
@@ -910,13 +1623,21 @@ export type OrdersByCustomerIDQuery = {
     items:  Array< {
       __typename: "Order",
       id: string,
-      orderNumber: string,
       intakeDate: string,
-      status?: string | null,
+      pickupDate?: string | null,
       completed: boolean,
       customerID: string,
       deviceID: string,
       teamID?: string | null,
+      Notes?:  {
+        __typename: "ModelNoteConnection",
+        nextToken?: string | null,
+      } | null,
+      Services?:  {
+        __typename: "ModelOrderServiceConnection",
+        nextToken?: string | null,
+      } | null,
+      status?: string | null,
       createdAt: string,
       updatedAt: string,
     } | null >,
@@ -938,17 +1659,342 @@ export type OrdersByDeviceIDQuery = {
     items:  Array< {
       __typename: "Order",
       id: string,
-      orderNumber: string,
       intakeDate: string,
-      status?: string | null,
+      pickupDate?: string | null,
       completed: boolean,
       customerID: string,
       deviceID: string,
       teamID?: string | null,
+      Notes?:  {
+        __typename: "ModelNoteConnection",
+        nextToken?: string | null,
+      } | null,
+      Services?:  {
+        __typename: "ModelOrderServiceConnection",
+        nextToken?: string | null,
+      } | null,
+      status?: string | null,
       createdAt: string,
       updatedAt: string,
     } | null >,
     nextToken?: string | null,
+  } | null,
+};
+
+export type GetOrderServiceQueryVariables = {
+  id: string,
+};
+
+export type GetOrderServiceQuery = {
+  getOrderService?:  {
+    __typename: "OrderService",
+    id: string,
+    serviceId: string,
+    orderId: string,
+    service:  {
+      __typename: "Service",
+      id: string,
+      name: string,
+      price: string,
+      teamID?: string | null,
+      orders?:  {
+        __typename: "ModelOrderServiceConnection",
+        nextToken?: string | null,
+      } | null,
+      createdAt: string,
+      updatedAt: string,
+    },
+    order:  {
+      __typename: "Order",
+      id: string,
+      intakeDate: string,
+      pickupDate?: string | null,
+      completed: boolean,
+      customerID: string,
+      deviceID: string,
+      teamID?: string | null,
+      Notes?:  {
+        __typename: "ModelNoteConnection",
+        nextToken?: string | null,
+      } | null,
+      Services?:  {
+        __typename: "ModelOrderServiceConnection",
+        nextToken?: string | null,
+      } | null,
+      status?: string | null,
+      createdAt: string,
+      updatedAt: string,
+    },
+    createdAt: string,
+    updatedAt: string,
+  } | null,
+};
+
+export type ListOrderServicesQueryVariables = {
+  filter?: ModelOrderServiceFilterInput | null,
+  limit?: number | null,
+  nextToken?: string | null,
+};
+
+export type ListOrderServicesQuery = {
+  listOrderServices?:  {
+    __typename: "ModelOrderServiceConnection",
+    items:  Array< {
+      __typename: "OrderService",
+      id: string,
+      serviceId: string,
+      orderId: string,
+      service:  {
+        __typename: "Service",
+        id: string,
+        name: string,
+        price: string,
+        teamID?: string | null,
+        createdAt: string,
+        updatedAt: string,
+      },
+      order:  {
+        __typename: "Order",
+        id: string,
+        intakeDate: string,
+        pickupDate?: string | null,
+        completed: boolean,
+        customerID: string,
+        deviceID: string,
+        teamID?: string | null,
+        status?: string | null,
+        createdAt: string,
+        updatedAt: string,
+      },
+      createdAt: string,
+      updatedAt: string,
+    } | null >,
+    nextToken?: string | null,
+  } | null,
+};
+
+export type OrderServicesByServiceIdQueryVariables = {
+  serviceId: string,
+  sortDirection?: ModelSortDirection | null,
+  filter?: ModelOrderServiceFilterInput | null,
+  limit?: number | null,
+  nextToken?: string | null,
+};
+
+export type OrderServicesByServiceIdQuery = {
+  orderServicesByServiceId?:  {
+    __typename: "ModelOrderServiceConnection",
+    items:  Array< {
+      __typename: "OrderService",
+      id: string,
+      serviceId: string,
+      orderId: string,
+      service:  {
+        __typename: "Service",
+        id: string,
+        name: string,
+        price: string,
+        teamID?: string | null,
+        createdAt: string,
+        updatedAt: string,
+      },
+      order:  {
+        __typename: "Order",
+        id: string,
+        intakeDate: string,
+        pickupDate?: string | null,
+        completed: boolean,
+        customerID: string,
+        deviceID: string,
+        teamID?: string | null,
+        status?: string | null,
+        createdAt: string,
+        updatedAt: string,
+      },
+      createdAt: string,
+      updatedAt: string,
+    } | null >,
+    nextToken?: string | null,
+  } | null,
+};
+
+export type OrderServicesByOrderIdQueryVariables = {
+  orderId: string,
+  sortDirection?: ModelSortDirection | null,
+  filter?: ModelOrderServiceFilterInput | null,
+  limit?: number | null,
+  nextToken?: string | null,
+};
+
+export type OrderServicesByOrderIdQuery = {
+  orderServicesByOrderId?:  {
+    __typename: "ModelOrderServiceConnection",
+    items:  Array< {
+      __typename: "OrderService",
+      id: string,
+      serviceId: string,
+      orderId: string,
+      service:  {
+        __typename: "Service",
+        id: string,
+        name: string,
+        price: string,
+        teamID?: string | null,
+        createdAt: string,
+        updatedAt: string,
+      },
+      order:  {
+        __typename: "Order",
+        id: string,
+        intakeDate: string,
+        pickupDate?: string | null,
+        completed: boolean,
+        customerID: string,
+        deviceID: string,
+        teamID?: string | null,
+        status?: string | null,
+        createdAt: string,
+        updatedAt: string,
+      },
+      createdAt: string,
+      updatedAt: string,
+    } | null >,
+    nextToken?: string | null,
+  } | null,
+};
+
+export type OnCreateServiceSubscriptionVariables = {
+  filter?: ModelSubscriptionServiceFilterInput | null,
+};
+
+export type OnCreateServiceSubscription = {
+  onCreateService?:  {
+    __typename: "Service",
+    id: string,
+    name: string,
+    price: string,
+    teamID?: string | null,
+    orders?:  {
+      __typename: "ModelOrderServiceConnection",
+      items:  Array< {
+        __typename: "OrderService",
+        id: string,
+        serviceId: string,
+        orderId: string,
+        createdAt: string,
+        updatedAt: string,
+      } | null >,
+      nextToken?: string | null,
+    } | null,
+    createdAt: string,
+    updatedAt: string,
+  } | null,
+};
+
+export type OnUpdateServiceSubscriptionVariables = {
+  filter?: ModelSubscriptionServiceFilterInput | null,
+};
+
+export type OnUpdateServiceSubscription = {
+  onUpdateService?:  {
+    __typename: "Service",
+    id: string,
+    name: string,
+    price: string,
+    teamID?: string | null,
+    orders?:  {
+      __typename: "ModelOrderServiceConnection",
+      items:  Array< {
+        __typename: "OrderService",
+        id: string,
+        serviceId: string,
+        orderId: string,
+        createdAt: string,
+        updatedAt: string,
+      } | null >,
+      nextToken?: string | null,
+    } | null,
+    createdAt: string,
+    updatedAt: string,
+  } | null,
+};
+
+export type OnDeleteServiceSubscriptionVariables = {
+  filter?: ModelSubscriptionServiceFilterInput | null,
+};
+
+export type OnDeleteServiceSubscription = {
+  onDeleteService?:  {
+    __typename: "Service",
+    id: string,
+    name: string,
+    price: string,
+    teamID?: string | null,
+    orders?:  {
+      __typename: "ModelOrderServiceConnection",
+      items:  Array< {
+        __typename: "OrderService",
+        id: string,
+        serviceId: string,
+        orderId: string,
+        createdAt: string,
+        updatedAt: string,
+      } | null >,
+      nextToken?: string | null,
+    } | null,
+    createdAt: string,
+    updatedAt: string,
+  } | null,
+};
+
+export type OnCreateNoteSubscriptionVariables = {
+  filter?: ModelSubscriptionNoteFilterInput | null,
+};
+
+export type OnCreateNoteSubscription = {
+  onCreateNote?:  {
+    __typename: "Note",
+    id: string,
+    text: string,
+    orderID: string,
+    date: string,
+    author: string,
+    createdAt: string,
+    updatedAt: string,
+  } | null,
+};
+
+export type OnUpdateNoteSubscriptionVariables = {
+  filter?: ModelSubscriptionNoteFilterInput | null,
+};
+
+export type OnUpdateNoteSubscription = {
+  onUpdateNote?:  {
+    __typename: "Note",
+    id: string,
+    text: string,
+    orderID: string,
+    date: string,
+    author: string,
+    createdAt: string,
+    updatedAt: string,
+  } | null,
+};
+
+export type OnDeleteNoteSubscriptionVariables = {
+  filter?: ModelSubscriptionNoteFilterInput | null,
+};
+
+export type OnDeleteNoteSubscription = {
+  onDeleteNote?:  {
+    __typename: "Note",
+    id: string,
+    text: string,
+    orderID: string,
+    date: string,
+    author: string,
+    createdAt: string,
+    updatedAt: string,
   } | null,
 };
 
@@ -969,13 +2015,13 @@ export type OnCreateCustomerSubscription = {
       items:  Array< {
         __typename: "Order",
         id: string,
-        orderNumber: string,
         intakeDate: string,
-        status?: string | null,
+        pickupDate?: string | null,
         completed: boolean,
         customerID: string,
         deviceID: string,
         teamID?: string | null,
+        status?: string | null,
         createdAt: string,
         updatedAt: string,
       } | null >,
@@ -986,13 +2032,13 @@ export type OnCreateCustomerSubscription = {
       items:  Array< {
         __typename: "Order",
         id: string,
-        orderNumber: string,
         intakeDate: string,
-        status?: string | null,
+        pickupDate?: string | null,
         completed: boolean,
         customerID: string,
         deviceID: string,
         teamID?: string | null,
+        status?: string | null,
         createdAt: string,
         updatedAt: string,
       } | null >,
@@ -1021,13 +2067,13 @@ export type OnUpdateCustomerSubscription = {
       items:  Array< {
         __typename: "Order",
         id: string,
-        orderNumber: string,
         intakeDate: string,
-        status?: string | null,
+        pickupDate?: string | null,
         completed: boolean,
         customerID: string,
         deviceID: string,
         teamID?: string | null,
+        status?: string | null,
         createdAt: string,
         updatedAt: string,
       } | null >,
@@ -1038,13 +2084,13 @@ export type OnUpdateCustomerSubscription = {
       items:  Array< {
         __typename: "Order",
         id: string,
-        orderNumber: string,
         intakeDate: string,
-        status?: string | null,
+        pickupDate?: string | null,
         completed: boolean,
         customerID: string,
         deviceID: string,
         teamID?: string | null,
+        status?: string | null,
         createdAt: string,
         updatedAt: string,
       } | null >,
@@ -1073,13 +2119,13 @@ export type OnDeleteCustomerSubscription = {
       items:  Array< {
         __typename: "Order",
         id: string,
-        orderNumber: string,
         intakeDate: string,
-        status?: string | null,
+        pickupDate?: string | null,
         completed: boolean,
         customerID: string,
         deviceID: string,
         teamID?: string | null,
+        status?: string | null,
         createdAt: string,
         updatedAt: string,
       } | null >,
@@ -1090,13 +2136,13 @@ export type OnDeleteCustomerSubscription = {
       items:  Array< {
         __typename: "Order",
         id: string,
-        orderNumber: string,
         intakeDate: string,
-        status?: string | null,
+        pickupDate?: string | null,
         completed: boolean,
         customerID: string,
         deviceID: string,
         teamID?: string | null,
+        status?: string | null,
         createdAt: string,
         updatedAt: string,
       } | null >,
@@ -1126,13 +2172,13 @@ export type OnCreateDeviceSubscription = {
       items:  Array< {
         __typename: "Order",
         id: string,
-        orderNumber: string,
         intakeDate: string,
-        status?: string | null,
+        pickupDate?: string | null,
         completed: boolean,
         customerID: string,
         deviceID: string,
         teamID?: string | null,
+        status?: string | null,
         createdAt: string,
         updatedAt: string,
       } | null >,
@@ -1161,13 +2207,13 @@ export type OnUpdateDeviceSubscription = {
       items:  Array< {
         __typename: "Order",
         id: string,
-        orderNumber: string,
         intakeDate: string,
-        status?: string | null,
+        pickupDate?: string | null,
         completed: boolean,
         customerID: string,
         deviceID: string,
         teamID?: string | null,
+        status?: string | null,
         createdAt: string,
         updatedAt: string,
       } | null >,
@@ -1196,13 +2242,13 @@ export type OnDeleteDeviceSubscription = {
       items:  Array< {
         __typename: "Order",
         id: string,
-        orderNumber: string,
         intakeDate: string,
-        status?: string | null,
+        pickupDate?: string | null,
         completed: boolean,
         customerID: string,
         deviceID: string,
         teamID?: string | null,
+        status?: string | null,
         createdAt: string,
         updatedAt: string,
       } | null >,
@@ -1221,13 +2267,39 @@ export type OnCreateOrderSubscription = {
   onCreateOrder?:  {
     __typename: "Order",
     id: string,
-    orderNumber: string,
     intakeDate: string,
-    status?: string | null,
+    pickupDate?: string | null,
     completed: boolean,
     customerID: string,
     deviceID: string,
     teamID?: string | null,
+    Notes?:  {
+      __typename: "ModelNoteConnection",
+      items:  Array< {
+        __typename: "Note",
+        id: string,
+        text: string,
+        orderID: string,
+        date: string,
+        author: string,
+        createdAt: string,
+        updatedAt: string,
+      } | null >,
+      nextToken?: string | null,
+    } | null,
+    Services?:  {
+      __typename: "ModelOrderServiceConnection",
+      items:  Array< {
+        __typename: "OrderService",
+        id: string,
+        serviceId: string,
+        orderId: string,
+        createdAt: string,
+        updatedAt: string,
+      } | null >,
+      nextToken?: string | null,
+    } | null,
+    status?: string | null,
     createdAt: string,
     updatedAt: string,
   } | null,
@@ -1241,13 +2313,39 @@ export type OnUpdateOrderSubscription = {
   onUpdateOrder?:  {
     __typename: "Order",
     id: string,
-    orderNumber: string,
     intakeDate: string,
-    status?: string | null,
+    pickupDate?: string | null,
     completed: boolean,
     customerID: string,
     deviceID: string,
     teamID?: string | null,
+    Notes?:  {
+      __typename: "ModelNoteConnection",
+      items:  Array< {
+        __typename: "Note",
+        id: string,
+        text: string,
+        orderID: string,
+        date: string,
+        author: string,
+        createdAt: string,
+        updatedAt: string,
+      } | null >,
+      nextToken?: string | null,
+    } | null,
+    Services?:  {
+      __typename: "ModelOrderServiceConnection",
+      items:  Array< {
+        __typename: "OrderService",
+        id: string,
+        serviceId: string,
+        orderId: string,
+        createdAt: string,
+        updatedAt: string,
+      } | null >,
+      nextToken?: string | null,
+    } | null,
+    status?: string | null,
     createdAt: string,
     updatedAt: string,
   } | null,
@@ -1261,13 +2359,186 @@ export type OnDeleteOrderSubscription = {
   onDeleteOrder?:  {
     __typename: "Order",
     id: string,
-    orderNumber: string,
     intakeDate: string,
-    status?: string | null,
+    pickupDate?: string | null,
     completed: boolean,
     customerID: string,
     deviceID: string,
     teamID?: string | null,
+    Notes?:  {
+      __typename: "ModelNoteConnection",
+      items:  Array< {
+        __typename: "Note",
+        id: string,
+        text: string,
+        orderID: string,
+        date: string,
+        author: string,
+        createdAt: string,
+        updatedAt: string,
+      } | null >,
+      nextToken?: string | null,
+    } | null,
+    Services?:  {
+      __typename: "ModelOrderServiceConnection",
+      items:  Array< {
+        __typename: "OrderService",
+        id: string,
+        serviceId: string,
+        orderId: string,
+        createdAt: string,
+        updatedAt: string,
+      } | null >,
+      nextToken?: string | null,
+    } | null,
+    status?: string | null,
+    createdAt: string,
+    updatedAt: string,
+  } | null,
+};
+
+export type OnCreateOrderServiceSubscriptionVariables = {
+  filter?: ModelSubscriptionOrderServiceFilterInput | null,
+};
+
+export type OnCreateOrderServiceSubscription = {
+  onCreateOrderService?:  {
+    __typename: "OrderService",
+    id: string,
+    serviceId: string,
+    orderId: string,
+    service:  {
+      __typename: "Service",
+      id: string,
+      name: string,
+      price: string,
+      teamID?: string | null,
+      orders?:  {
+        __typename: "ModelOrderServiceConnection",
+        nextToken?: string | null,
+      } | null,
+      createdAt: string,
+      updatedAt: string,
+    },
+    order:  {
+      __typename: "Order",
+      id: string,
+      intakeDate: string,
+      pickupDate?: string | null,
+      completed: boolean,
+      customerID: string,
+      deviceID: string,
+      teamID?: string | null,
+      Notes?:  {
+        __typename: "ModelNoteConnection",
+        nextToken?: string | null,
+      } | null,
+      Services?:  {
+        __typename: "ModelOrderServiceConnection",
+        nextToken?: string | null,
+      } | null,
+      status?: string | null,
+      createdAt: string,
+      updatedAt: string,
+    },
+    createdAt: string,
+    updatedAt: string,
+  } | null,
+};
+
+export type OnUpdateOrderServiceSubscriptionVariables = {
+  filter?: ModelSubscriptionOrderServiceFilterInput | null,
+};
+
+export type OnUpdateOrderServiceSubscription = {
+  onUpdateOrderService?:  {
+    __typename: "OrderService",
+    id: string,
+    serviceId: string,
+    orderId: string,
+    service:  {
+      __typename: "Service",
+      id: string,
+      name: string,
+      price: string,
+      teamID?: string | null,
+      orders?:  {
+        __typename: "ModelOrderServiceConnection",
+        nextToken?: string | null,
+      } | null,
+      createdAt: string,
+      updatedAt: string,
+    },
+    order:  {
+      __typename: "Order",
+      id: string,
+      intakeDate: string,
+      pickupDate?: string | null,
+      completed: boolean,
+      customerID: string,
+      deviceID: string,
+      teamID?: string | null,
+      Notes?:  {
+        __typename: "ModelNoteConnection",
+        nextToken?: string | null,
+      } | null,
+      Services?:  {
+        __typename: "ModelOrderServiceConnection",
+        nextToken?: string | null,
+      } | null,
+      status?: string | null,
+      createdAt: string,
+      updatedAt: string,
+    },
+    createdAt: string,
+    updatedAt: string,
+  } | null,
+};
+
+export type OnDeleteOrderServiceSubscriptionVariables = {
+  filter?: ModelSubscriptionOrderServiceFilterInput | null,
+};
+
+export type OnDeleteOrderServiceSubscription = {
+  onDeleteOrderService?:  {
+    __typename: "OrderService",
+    id: string,
+    serviceId: string,
+    orderId: string,
+    service:  {
+      __typename: "Service",
+      id: string,
+      name: string,
+      price: string,
+      teamID?: string | null,
+      orders?:  {
+        __typename: "ModelOrderServiceConnection",
+        nextToken?: string | null,
+      } | null,
+      createdAt: string,
+      updatedAt: string,
+    },
+    order:  {
+      __typename: "Order",
+      id: string,
+      intakeDate: string,
+      pickupDate?: string | null,
+      completed: boolean,
+      customerID: string,
+      deviceID: string,
+      teamID?: string | null,
+      Notes?:  {
+        __typename: "ModelNoteConnection",
+        nextToken?: string | null,
+      } | null,
+      Services?:  {
+        __typename: "ModelOrderServiceConnection",
+        nextToken?: string | null,
+      } | null,
+      status?: string | null,
+      createdAt: string,
+      updatedAt: string,
+    },
     createdAt: string,
     updatedAt: string,
   } | null,

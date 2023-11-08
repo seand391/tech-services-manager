@@ -22,7 +22,7 @@ import {
 import { fetchByPath, getOverrideProps, validateField } from "./utils";
 import { API } from "aws-amplify";
 import { listOrders } from "../graphql/queries";
-import { createDevice, updateOrder } from "../graphql/mutations";
+import { createNote } from "../graphql/mutations";
 function ArrayField({
   items = [],
   onChange,
@@ -178,7 +178,7 @@ function ArrayField({
     </React.Fragment>
   );
 }
-export default function DeviceCreateForm(props) {
+export default function NoteCreateForm(props) {
   const {
     clearOnSuccess = true,
     onSuccess,
@@ -190,58 +190,44 @@ export default function DeviceCreateForm(props) {
     ...rest
   } = props;
   const initialValues = {
-    type: "",
-    brand: "",
-    password: "",
-    serialNumber: "",
-    customerID: "",
-    Orders: [],
+    text: "",
+    orderID: undefined,
+    date: "",
+    author: "",
   };
-  const [type, setType] = React.useState(initialValues.type);
-  const [brand, setBrand] = React.useState(initialValues.brand);
-  const [password, setPassword] = React.useState(initialValues.password);
-  const [serialNumber, setSerialNumber] = React.useState(
-    initialValues.serialNumber
+  const [text, setText] = React.useState(initialValues.text);
+  const [orderID, setOrderID] = React.useState(initialValues.orderID);
+  const [orderIDLoading, setOrderIDLoading] = React.useState(false);
+  const [orderIDRecords, setOrderIDRecords] = React.useState([]);
+  const [selectedOrderIDRecords, setSelectedOrderIDRecords] = React.useState(
+    []
   );
-  const [customerID, setCustomerID] = React.useState(initialValues.customerID);
-  const [Orders, setOrders] = React.useState(initialValues.Orders);
-  const [OrdersLoading, setOrdersLoading] = React.useState(false);
-  const [OrdersRecords, setOrdersRecords] = React.useState([]);
+  const [date, setDate] = React.useState(initialValues.date);
+  const [author, setAuthor] = React.useState(initialValues.author);
   const autocompleteLength = 10;
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
-    setType(initialValues.type);
-    setBrand(initialValues.brand);
-    setPassword(initialValues.password);
-    setSerialNumber(initialValues.serialNumber);
-    setCustomerID(initialValues.customerID);
-    setOrders(initialValues.Orders);
-    setCurrentOrdersValue(undefined);
-    setCurrentOrdersDisplayValue("");
+    setText(initialValues.text);
+    setOrderID(initialValues.orderID);
+    setCurrentOrderIDValue(undefined);
+    setCurrentOrderIDDisplayValue("");
+    setDate(initialValues.date);
+    setAuthor(initialValues.author);
     setErrors({});
   };
-  const [currentOrdersDisplayValue, setCurrentOrdersDisplayValue] =
+  const [currentOrderIDDisplayValue, setCurrentOrderIDDisplayValue] =
     React.useState("");
-  const [currentOrdersValue, setCurrentOrdersValue] = React.useState(undefined);
-  const OrdersRef = React.createRef();
-  const getIDValue = {
-    Orders: (r) => JSON.stringify({ id: r?.id }),
-  };
-  const OrdersIdSet = new Set(
-    Array.isArray(Orders)
-      ? Orders.map((r) => getIDValue.Orders?.(r))
-      : getIDValue.Orders?.(Orders)
-  );
+  const [currentOrderIDValue, setCurrentOrderIDValue] =
+    React.useState(undefined);
+  const orderIDRef = React.createRef();
   const getDisplayValue = {
-    Orders: (r) => `${r?.completed ? r?.completed + " - " : ""}${r?.id}`,
+    orderID: (r) => `${r?.completed ? r?.completed + " - " : ""}${r?.id}`,
   };
   const validations = {
-    type: [{ type: "Required" }],
-    brand: [],
-    password: [],
-    serialNumber: [],
-    customerID: [{ type: "Required" }],
-    Orders: [],
+    text: [{ type: "Required" }],
+    orderID: [{ type: "Required" }],
+    date: [{ type: "Required" }],
+    author: [{ type: "Required" }],
   };
   const runValidationTasks = async (
     fieldName,
@@ -260,8 +246,25 @@ export default function DeviceCreateForm(props) {
     setErrors((errors) => ({ ...errors, [fieldName]: validationResponse }));
     return validationResponse;
   };
-  const fetchOrdersRecords = async (value) => {
-    setOrdersLoading(true);
+  const convertToLocal = (date) => {
+    const df = new Intl.DateTimeFormat("default", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      calendar: "iso8601",
+      numberingSystem: "latn",
+      hourCycle: "h23",
+    });
+    const parts = df.formatToParts(date).reduce((acc, part) => {
+      acc[part.type] = part.value;
+      return acc;
+    }, {});
+    return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
+  };
+  const fetchOrderIDRecords = async (value) => {
+    setOrderIDLoading(true);
     const newOptions = [];
     let newNext = "";
     while (newOptions.length < autocompleteLength && newNext != null) {
@@ -280,17 +283,15 @@ export default function DeviceCreateForm(props) {
           variables,
         })
       )?.data?.listOrders?.items;
-      var loaded = result.filter(
-        (item) => !OrdersIdSet.has(getIDValue.Orders?.(item))
-      );
+      var loaded = result.filter((item) => orderID !== item.id);
       newOptions.push(...loaded);
       newNext = result.nextToken;
     }
-    setOrdersRecords(newOptions.slice(0, autocompleteLength));
-    setOrdersLoading(false);
+    setOrderIDRecords(newOptions.slice(0, autocompleteLength));
+    setOrderIDLoading(false);
   };
   React.useEffect(() => {
-    fetchOrdersRecords("");
+    fetchOrderIDRecords("");
   }, []);
   return (
     <Grid
@@ -301,33 +302,23 @@ export default function DeviceCreateForm(props) {
       onSubmit={async (event) => {
         event.preventDefault();
         let modelFields = {
-          type,
-          brand,
-          password,
-          serialNumber,
-          customerID,
-          Orders,
+          text,
+          orderID,
+          date,
+          author,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
             if (Array.isArray(modelFields[fieldName])) {
               promises.push(
                 ...modelFields[fieldName].map((item) =>
-                  runValidationTasks(
-                    fieldName,
-                    item,
-                    getDisplayValue[fieldName]
-                  )
+                  runValidationTasks(fieldName, item)
                 )
               );
               return promises;
             }
             promises.push(
-              runValidationTasks(
-                fieldName,
-                modelFields[fieldName],
-                getDisplayValue[fieldName]
-              )
+              runValidationTasks(fieldName, modelFields[fieldName])
             );
             return promises;
           }, [])
@@ -344,41 +335,14 @@ export default function DeviceCreateForm(props) {
               modelFields[key] = null;
             }
           });
-          const modelFieldsToSave = {
-            type: modelFields.type,
-            brand: modelFields.brand,
-            password: modelFields.password,
-            serialNumber: modelFields.serialNumber,
-            customerID: modelFields.customerID,
-          };
-          const device = (
-            await API.graphql({
-              query: createDevice.replaceAll("__typename", ""),
-              variables: {
-                input: {
-                  ...modelFieldsToSave,
-                },
+          await API.graphql({
+            query: createNote.replaceAll("__typename", ""),
+            variables: {
+              input: {
+                ...modelFields,
               },
-            })
-          )?.data?.createDevice;
-          const promises = [];
-          promises.push(
-            ...Orders.reduce((promises, original) => {
-              promises.push(
-                API.graphql({
-                  query: updateOrder.replaceAll("__typename", ""),
-                  variables: {
-                    input: {
-                      id: original.id,
-                      deviceID: device.id,
-                    },
-                  },
-                })
-              );
-              return promises;
-            }, [])
-          );
-          await Promise.all(promises);
+            },
+          });
           if (onSuccess) {
             onSuccess(modelFields);
           }
@@ -392,236 +356,184 @@ export default function DeviceCreateForm(props) {
           }
         }
       }}
-      {...getOverrideProps(overrides, "DeviceCreateForm")}
+      {...getOverrideProps(overrides, "NoteCreateForm")}
       {...rest}
     >
       <TextField
-        label="Type"
+        label="Text"
         isRequired={true}
         isReadOnly={false}
-        placeholder="Laptop, tablet, phone, etc."
-        value={type}
+        value={text}
         onChange={(e) => {
           let { value } = e.target;
           if (onChange) {
             const modelFields = {
-              type: value,
-              brand,
-              password,
-              serialNumber,
-              customerID,
-              Orders,
+              text: value,
+              orderID,
+              date,
+              author,
             };
             const result = onChange(modelFields);
-            value = result?.type ?? value;
+            value = result?.text ?? value;
           }
-          if (errors.type?.hasError) {
-            runValidationTasks("type", value);
+          if (errors.text?.hasError) {
+            runValidationTasks("text", value);
           }
-          setType(value);
+          setText(value);
         }}
-        onBlur={() => runValidationTasks("type", type)}
-        errorMessage={errors.type?.errorMessage}
-        hasError={errors.type?.hasError}
-        {...getOverrideProps(overrides, "type")}
-      ></TextField>
-      <TextField
-        label="Brand"
-        isRequired={false}
-        isReadOnly={false}
-        value={brand}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              type,
-              brand: value,
-              password,
-              serialNumber,
-              customerID,
-              Orders,
-            };
-            const result = onChange(modelFields);
-            value = result?.brand ?? value;
-          }
-          if (errors.brand?.hasError) {
-            runValidationTasks("brand", value);
-          }
-          setBrand(value);
-        }}
-        onBlur={() => runValidationTasks("brand", brand)}
-        errorMessage={errors.brand?.errorMessage}
-        hasError={errors.brand?.hasError}
-        {...getOverrideProps(overrides, "brand")}
-      ></TextField>
-      <TextField
-        label="Password"
-        isRequired={false}
-        isReadOnly={false}
-        value={password}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              type,
-              brand,
-              password: value,
-              serialNumber,
-              customerID,
-              Orders,
-            };
-            const result = onChange(modelFields);
-            value = result?.password ?? value;
-          }
-          if (errors.password?.hasError) {
-            runValidationTasks("password", value);
-          }
-          setPassword(value);
-        }}
-        onBlur={() => runValidationTasks("password", password)}
-        errorMessage={errors.password?.errorMessage}
-        hasError={errors.password?.hasError}
-        {...getOverrideProps(overrides, "password")}
-      ></TextField>
-      <TextField
-        label="Serial number"
-        isRequired={false}
-        isReadOnly={false}
-        value={serialNumber}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              type,
-              brand,
-              password,
-              serialNumber: value,
-              customerID,
-              Orders,
-            };
-            const result = onChange(modelFields);
-            value = result?.serialNumber ?? value;
-          }
-          if (errors.serialNumber?.hasError) {
-            runValidationTasks("serialNumber", value);
-          }
-          setSerialNumber(value);
-        }}
-        onBlur={() => runValidationTasks("serialNumber", serialNumber)}
-        errorMessage={errors.serialNumber?.errorMessage}
-        hasError={errors.serialNumber?.hasError}
-        {...getOverrideProps(overrides, "serialNumber")}
-      ></TextField>
-      <TextField
-        label="Customer"
-        isRequired={true}
-        isReadOnly={false}
-        value={customerID}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              type,
-              brand,
-              password,
-              serialNumber,
-              customerID: value,
-              Orders,
-            };
-            const result = onChange(modelFields);
-            value = result?.customerID ?? value;
-          }
-          if (errors.customerID?.hasError) {
-            runValidationTasks("customerID", value);
-          }
-          setCustomerID(value);
-        }}
-        onBlur={() => runValidationTasks("customerID", customerID)}
-        errorMessage={errors.customerID?.errorMessage}
-        hasError={errors.customerID?.hasError}
-        {...getOverrideProps(overrides, "customerID")}
+        onBlur={() => runValidationTasks("text", text)}
+        errorMessage={errors.text?.errorMessage}
+        hasError={errors.text?.hasError}
+        {...getOverrideProps(overrides, "text")}
       ></TextField>
       <ArrayField
+        lengthLimit={1}
         onChange={async (items) => {
-          let values = items;
+          let value = items[0];
           if (onChange) {
             const modelFields = {
-              type,
-              brand,
-              password,
-              serialNumber,
-              customerID,
-              Orders: values,
+              text,
+              orderID: value,
+              date,
+              author,
             };
             const result = onChange(modelFields);
-            values = result?.Orders ?? values;
+            value = result?.orderID ?? value;
           }
-          setOrders(values);
-          setCurrentOrdersValue(undefined);
-          setCurrentOrdersDisplayValue("");
+          setOrderID(value);
+          setCurrentOrderIDValue(undefined);
         }}
-        currentFieldValue={currentOrdersValue}
-        label={"Orders"}
-        items={Orders}
-        hasError={errors?.Orders?.hasError}
+        currentFieldValue={currentOrderIDValue}
+        label={"Order id"}
+        items={orderID ? [orderID] : []}
+        hasError={errors?.orderID?.hasError}
         runValidationTasks={async () =>
-          await runValidationTasks("Orders", currentOrdersValue)
+          await runValidationTasks("orderID", currentOrderIDValue)
         }
-        errorMessage={errors?.Orders?.errorMessage}
-        getBadgeText={getDisplayValue.Orders}
-        setFieldValue={(model) => {
-          setCurrentOrdersDisplayValue(
-            model ? getDisplayValue.Orders(model) : ""
+        errorMessage={errors?.orderID?.errorMessage}
+        getBadgeText={(value) =>
+          value
+            ? getDisplayValue.orderID(
+                orderIDRecords.find((r) => r.id === value) ??
+                  selectedOrderIDRecords.find((r) => r.id === value)
+              )
+            : ""
+        }
+        setFieldValue={(value) => {
+          setCurrentOrderIDDisplayValue(
+            value
+              ? getDisplayValue.orderID(
+                  orderIDRecords.find((r) => r.id === value) ??
+                    selectedOrderIDRecords.find((r) => r.id === value)
+                )
+              : ""
           );
-          setCurrentOrdersValue(model);
+          setCurrentOrderIDValue(value);
+          const selectedRecord = orderIDRecords.find((r) => r.id === value);
+          if (selectedRecord) {
+            setSelectedOrderIDRecords([selectedRecord]);
+          }
         }}
-        inputFieldRef={OrdersRef}
+        inputFieldRef={orderIDRef}
         defaultFieldValue={""}
       >
         <Autocomplete
-          label="Orders"
-          isRequired={false}
+          label="Order id"
+          isRequired={true}
           isReadOnly={false}
           placeholder="Search Order"
-          value={currentOrdersDisplayValue}
-          options={OrdersRecords.filter(
-            (r) => !OrdersIdSet.has(getIDValue.Orders?.(r))
-          ).map((r) => ({
-            id: getIDValue.Orders?.(r),
-            label: getDisplayValue.Orders?.(r),
-          }))}
-          isLoading={OrdersLoading}
+          value={currentOrderIDDisplayValue}
+          options={orderIDRecords
+            .filter(
+              (r, i, arr) =>
+                arr.findIndex((member) => member?.id === r?.id) === i
+            )
+            .map((r) => ({
+              id: r?.id,
+              label: getDisplayValue.orderID?.(r),
+            }))}
+          isLoading={orderIDLoading}
           onSelect={({ id, label }) => {
-            setCurrentOrdersValue(
-              OrdersRecords.find((r) =>
-                Object.entries(JSON.parse(id)).every(
-                  ([key, value]) => r[key] === value
-                )
-              )
-            );
-            setCurrentOrdersDisplayValue(label);
-            runValidationTasks("Orders", label);
+            setCurrentOrderIDValue(id);
+            setCurrentOrderIDDisplayValue(label);
+            runValidationTasks("orderID", label);
           }}
           onClear={() => {
-            setCurrentOrdersDisplayValue("");
+            setCurrentOrderIDDisplayValue("");
           }}
           onChange={(e) => {
             let { value } = e.target;
-            fetchOrdersRecords(value);
-            if (errors.Orders?.hasError) {
-              runValidationTasks("Orders", value);
+            fetchOrderIDRecords(value);
+            if (errors.orderID?.hasError) {
+              runValidationTasks("orderID", value);
             }
-            setCurrentOrdersDisplayValue(value);
-            setCurrentOrdersValue(undefined);
+            setCurrentOrderIDDisplayValue(value);
+            setCurrentOrderIDValue(undefined);
           }}
-          onBlur={() => runValidationTasks("Orders", currentOrdersDisplayValue)}
-          errorMessage={errors.Orders?.errorMessage}
-          hasError={errors.Orders?.hasError}
-          ref={OrdersRef}
+          onBlur={() => runValidationTasks("orderID", currentOrderIDValue)}
+          errorMessage={errors.orderID?.errorMessage}
+          hasError={errors.orderID?.hasError}
+          ref={orderIDRef}
           labelHidden={true}
-          {...getOverrideProps(overrides, "Orders")}
+          {...getOverrideProps(overrides, "orderID")}
         ></Autocomplete>
       </ArrayField>
+      <TextField
+        label="Date"
+        isRequired={true}
+        isReadOnly={false}
+        type="datetime-local"
+        value={date && convertToLocal(new Date(date))}
+        onChange={(e) => {
+          let value =
+            e.target.value === "" ? "" : new Date(e.target.value).toISOString();
+          if (onChange) {
+            const modelFields = {
+              text,
+              orderID,
+              date: value,
+              author,
+            };
+            const result = onChange(modelFields);
+            value = result?.date ?? value;
+          }
+          if (errors.date?.hasError) {
+            runValidationTasks("date", value);
+          }
+          setDate(value);
+        }}
+        onBlur={() => runValidationTasks("date", date)}
+        errorMessage={errors.date?.errorMessage}
+        hasError={errors.date?.hasError}
+        {...getOverrideProps(overrides, "date")}
+      ></TextField>
+      <TextField
+        label="Author"
+        isRequired={true}
+        isReadOnly={false}
+        value={author}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              text,
+              orderID,
+              date,
+              author: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.author ?? value;
+          }
+          if (errors.author?.hasError) {
+            runValidationTasks("author", value);
+          }
+          setAuthor(value);
+        }}
+        onBlur={() => runValidationTasks("author", author)}
+        errorMessage={errors.author?.errorMessage}
+        hasError={errors.author?.hasError}
+        {...getOverrideProps(overrides, "author")}
+      ></TextField>
       <Flex
         justifyContent="space-between"
         {...getOverrideProps(overrides, "CTAFlex")}

@@ -20,6 +20,7 @@ export default function Customer() {
         `query currentUserCustomers {
             listCustomers(filter: {teamID: {eq: "`+ await currentUserSub() + `"}}) {
             items {
+              id
               first
               last
               email

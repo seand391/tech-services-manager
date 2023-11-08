@@ -1,3 +1,19 @@
+type Service @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  name: String!
+  price: String!
+  teamID: ID
+  orders: [Order] @manyToMany(relationName: "OrderService")
+}
+
+type Note @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  text: String!
+  orderID: ID! @index(name: "byOrder")
+  date: AWSDateTime!
+  author: String!
+}
+
 type Customer @model @auth(rules: [{allow: public}]) {
   id: ID!
   first: String!
@@ -21,11 +37,13 @@ type Device @model @auth(rules: [{allow: public}]) {
 
 type Order @model @auth(rules: [{allow: public, operations: [create, read, update]}]) {
   id: ID!
-  orderNumber: String!
   intakeDate: AWSDateTime!
-  status: String
+  pickupDate: AWSDateTime
   completed: Boolean!
   customerID: ID! @index(name: "byCustomer")
   deviceID: ID! @index(name: "byDevice")
   teamID: ID
+  Notes: [Note] @hasMany(indexName: "byOrder", fields: ["id"])
+  Services: [Service] @manyToMany(relationName: "OrderService")
+  status: String
 } 

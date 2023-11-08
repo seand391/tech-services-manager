@@ -28,8 +28,17 @@ import {
   getOrder,
   listCustomers,
   listDevices,
+  listNotes,
+  listOrderServices,
+  listServices,
+  orderServicesByOrderId,
 } from "../graphql/queries";
-import { updateOrder } from "../graphql/mutations";
+import {
+  createOrderService,
+  deleteOrderService,
+  updateNote,
+  updateOrder,
+} from "../graphql/mutations";
 function ArrayField({
   items = [],
   onChange,
@@ -198,19 +207,18 @@ export default function OrderUpdateForm(props) {
     ...rest
   } = props;
   const initialValues = {
-    orderNumber: "",
     intakeDate: "",
-    status: "",
+    pickupDate: "",
     completed: false,
     customerID: undefined,
     deviceID: undefined,
     teamID: "",
+    Notes: [],
+    Services: [],
+    status: "",
   };
-  const [orderNumber, setOrderNumber] = React.useState(
-    initialValues.orderNumber
-  );
   const [intakeDate, setIntakeDate] = React.useState(initialValues.intakeDate);
-  const [status, setStatus] = React.useState(initialValues.status);
+  const [pickupDate, setPickupDate] = React.useState(initialValues.pickupDate);
   const [completed, setCompleted] = React.useState(initialValues.completed);
   const [customerID, setCustomerID] = React.useState(initialValues.customerID);
   const [customerIDLoading, setCustomerIDLoading] = React.useState(false);
@@ -224,15 +232,28 @@ export default function OrderUpdateForm(props) {
     []
   );
   const [teamID, setTeamID] = React.useState(initialValues.teamID);
+  const [Notes, setNotes] = React.useState(initialValues.Notes);
+  const [NotesLoading, setNotesLoading] = React.useState(false);
+  const [NotesRecords, setNotesRecords] = React.useState([]);
+  const [Services, setServices] = React.useState(initialValues.Services);
+  const [ServicesLoading, setServicesLoading] = React.useState(false);
+  const [ServicesRecords, setServicesRecords] = React.useState([]);
+  const [status, setStatus] = React.useState(initialValues.status);
   const autocompleteLength = 10;
   const [errors, setErrors] = React.useState({});
   const resetStateValues = () => {
     const cleanValues = orderRecord
-      ? { ...initialValues, ...orderRecord, customerID, deviceID }
+      ? {
+          ...initialValues,
+          ...orderRecord,
+          customerID,
+          deviceID,
+          Notes: linkedNotes,
+          Services: linkedServices,
+        }
       : initialValues;
-    setOrderNumber(cleanValues.orderNumber);
     setIntakeDate(cleanValues.intakeDate);
-    setStatus(cleanValues.status);
+    setPickupDate(cleanValues.pickupDate);
     setCompleted(cleanValues.completed);
     setCustomerID(cleanValues.customerID);
     setCurrentCustomerIDValue(undefined);
@@ -241,9 +262,20 @@ export default function OrderUpdateForm(props) {
     setCurrentDeviceIDValue(undefined);
     setCurrentDeviceIDDisplayValue("");
     setTeamID(cleanValues.teamID);
+    setNotes(cleanValues.Notes ?? []);
+    setCurrentNotesValue(undefined);
+    setCurrentNotesDisplayValue("");
+    setServices(cleanValues.Services ?? []);
+    setCurrentServicesValue(undefined);
+    setCurrentServicesDisplayValue("");
+    setStatus(cleanValues.status);
     setErrors({});
   };
   const [orderRecord, setOrderRecord] = React.useState(orderModelProp);
+  const [linkedNotes, setLinkedNotes] = React.useState([]);
+  const canUnlinkNotes = false;
+  const [linkedServices, setLinkedServices] = React.useState([]);
+  const canUnlinkServices = false;
   React.useEffect(() => {
     const queryData = async () => {
       const record = idProp
@@ -276,11 +308,30 @@ export default function OrderUpdateForm(props) {
         : undefined;
       setDeviceID(deviceIDRecord);
       setSelectedDeviceIDRecords([deviceRecord]);
+      const linkedNotes = record?.Notes?.items ?? [];
+      setLinkedNotes(linkedNotes);
+      const linkedServices = record
+        ? (
+            await API.graphql({
+              query: orderServicesByOrderId.replaceAll("__typename", ""),
+              variables: {
+                orderId: record.id,
+              },
+            })
+          ).data.orderServicesByOrderId.items.map((t) => t.service)
+        : [];
+      setLinkedServices(linkedServices);
       setOrderRecord(record);
     };
     queryData();
   }, [idProp, orderModelProp]);
-  React.useEffect(resetStateValues, [orderRecord, customerID, deviceID]);
+  React.useEffect(resetStateValues, [
+    orderRecord,
+    customerID,
+    deviceID,
+    linkedNotes,
+    linkedServices,
+  ]);
   const [currentCustomerIDDisplayValue, setCurrentCustomerIDDisplayValue] =
     React.useState("");
   const [currentCustomerIDValue, setCurrentCustomerIDValue] =
@@ -291,18 +342,45 @@ export default function OrderUpdateForm(props) {
   const [currentDeviceIDValue, setCurrentDeviceIDValue] =
     React.useState(undefined);
   const deviceIDRef = React.createRef();
+  const [currentNotesDisplayValue, setCurrentNotesDisplayValue] =
+    React.useState("");
+  const [currentNotesValue, setCurrentNotesValue] = React.useState(undefined);
+  const NotesRef = React.createRef();
+  const [currentServicesDisplayValue, setCurrentServicesDisplayValue] =
+    React.useState("");
+  const [currentServicesValue, setCurrentServicesValue] =
+    React.useState(undefined);
+  const ServicesRef = React.createRef();
+  const getIDValue = {
+    Notes: (r) => JSON.stringify({ id: r?.id }),
+    Services: (r) => JSON.stringify({ id: r?.id }),
+  };
+  const NotesIdSet = new Set(
+    Array.isArray(Notes)
+      ? Notes.map((r) => getIDValue.Notes?.(r))
+      : getIDValue.Notes?.(Notes)
+  );
+  const ServicesIdSet = new Set(
+    Array.isArray(Services)
+      ? Services.map((r) => getIDValue.Services?.(r))
+      : getIDValue.Services?.(Services)
+  );
   const getDisplayValue = {
     customerID: (r) => `${r?.first ? r?.first + " - " : ""}${r?.id}`,
     deviceID: (r) => `${r?.type ? r?.type + " - " : ""}${r?.id}`,
+    Notes: (r) => `${r?.text ? r?.text + " - " : ""}${r?.id}`,
+    Services: (r) => `${r?.name ? r?.name + " - " : ""}${r?.id}`,
   };
   const validations = {
-    orderNumber: [{ type: "Required" }],
     intakeDate: [{ type: "Required" }],
-    status: [],
+    pickupDate: [],
     completed: [{ type: "Required" }],
     customerID: [{ type: "Required" }],
     deviceID: [{ type: "Required" }],
     teamID: [],
+    Notes: [],
+    Services: [],
+    status: [],
   };
   const runValidationTasks = async (
     fieldName,
@@ -392,9 +470,69 @@ export default function OrderUpdateForm(props) {
     setDeviceIDRecords(newOptions.slice(0, autocompleteLength));
     setDeviceIDLoading(false);
   };
+  const fetchNotesRecords = async (value) => {
+    setNotesLoading(true);
+    const newOptions = [];
+    let newNext = "";
+    while (newOptions.length < autocompleteLength && newNext != null) {
+      const variables = {
+        limit: autocompleteLength * 5,
+        filter: {
+          or: [{ text: { contains: value } }, { id: { contains: value } }],
+        },
+      };
+      if (newNext) {
+        variables["nextToken"] = newNext;
+      }
+      const result = (
+        await API.graphql({
+          query: listNotes.replaceAll("__typename", ""),
+          variables,
+        })
+      )?.data?.listNotes?.items;
+      var loaded = result.filter(
+        (item) => !NotesIdSet.has(getIDValue.Notes?.(item))
+      );
+      newOptions.push(...loaded);
+      newNext = result.nextToken;
+    }
+    setNotesRecords(newOptions.slice(0, autocompleteLength));
+    setNotesLoading(false);
+  };
+  const fetchServicesRecords = async (value) => {
+    setServicesLoading(true);
+    const newOptions = [];
+    let newNext = "";
+    while (newOptions.length < autocompleteLength && newNext != null) {
+      const variables = {
+        limit: autocompleteLength * 5,
+        filter: {
+          or: [{ name: { contains: value } }, { id: { contains: value } }],
+        },
+      };
+      if (newNext) {
+        variables["nextToken"] = newNext;
+      }
+      const result = (
+        await API.graphql({
+          query: listServices.replaceAll("__typename", ""),
+          variables,
+        })
+      )?.data?.listServices?.items;
+      var loaded = result.filter(
+        (item) => !ServicesIdSet.has(getIDValue.Services?.(item))
+      );
+      newOptions.push(...loaded);
+      newNext = result.nextToken;
+    }
+    setServicesRecords(newOptions.slice(0, autocompleteLength));
+    setServicesLoading(false);
+  };
   React.useEffect(() => {
     fetchCustomerIDRecords("");
     fetchDeviceIDRecords("");
+    fetchNotesRecords("");
+    fetchServicesRecords("");
   }, []);
   return (
     <Grid
@@ -405,26 +543,36 @@ export default function OrderUpdateForm(props) {
       onSubmit={async (event) => {
         event.preventDefault();
         let modelFields = {
-          orderNumber,
           intakeDate,
-          status: status ?? null,
+          pickupDate: pickupDate ?? null,
           completed,
           customerID,
           deviceID,
           teamID: teamID ?? null,
+          Notes: Notes ?? null,
+          Services: Services ?? null,
+          status: status ?? null,
         };
         const validationResponses = await Promise.all(
           Object.keys(validations).reduce((promises, fieldName) => {
             if (Array.isArray(modelFields[fieldName])) {
               promises.push(
                 ...modelFields[fieldName].map((item) =>
-                  runValidationTasks(fieldName, item)
+                  runValidationTasks(
+                    fieldName,
+                    item,
+                    getDisplayValue[fieldName]
+                  )
                 )
               );
               return promises;
             }
             promises.push(
-              runValidationTasks(fieldName, modelFields[fieldName])
+              runValidationTasks(
+                fieldName,
+                modelFields[fieldName],
+                getDisplayValue[fieldName]
+              )
             );
             return promises;
           }, [])
@@ -441,15 +589,159 @@ export default function OrderUpdateForm(props) {
               modelFields[key] = null;
             }
           });
-          await API.graphql({
-            query: updateOrder.replaceAll("__typename", ""),
-            variables: {
-              input: {
-                id: orderRecord.id,
-                ...modelFields,
-              },
-            },
+          const promises = [];
+          const notesToLink = [];
+          const notesToUnLink = [];
+          const notesSet = new Set();
+          const linkedNotesSet = new Set();
+          Notes.forEach((r) => notesSet.add(getIDValue.Notes?.(r)));
+          linkedNotes.forEach((r) => linkedNotesSet.add(getIDValue.Notes?.(r)));
+          linkedNotes.forEach((r) => {
+            if (!notesSet.has(getIDValue.Notes?.(r))) {
+              notesToUnLink.push(r);
+            }
           });
+          Notes.forEach((r) => {
+            if (!linkedNotesSet.has(getIDValue.Notes?.(r))) {
+              notesToLink.push(r);
+            }
+          });
+          notesToUnLink.forEach((original) => {
+            if (!canUnlinkNotes) {
+              throw Error(
+                `Note ${original.id} cannot be unlinked from Order because orderID is a required field.`
+              );
+            }
+            promises.push(
+              API.graphql({
+                query: updateNote.replaceAll("__typename", ""),
+                variables: {
+                  input: {
+                    id: original.id,
+                    orderID: null,
+                  },
+                },
+              })
+            );
+          });
+          notesToLink.forEach((original) => {
+            promises.push(
+              API.graphql({
+                query: updateNote.replaceAll("__typename", ""),
+                variables: {
+                  input: {
+                    id: original.id,
+                    orderID: orderRecord.id,
+                  },
+                },
+              })
+            );
+          });
+          const servicesToLinkMap = new Map();
+          const servicesToUnLinkMap = new Map();
+          const servicesMap = new Map();
+          const linkedServicesMap = new Map();
+          Services.forEach((r) => {
+            const count = servicesMap.get(getIDValue.Services?.(r));
+            const newCount = count ? count + 1 : 1;
+            servicesMap.set(getIDValue.Services?.(r), newCount);
+          });
+          linkedServices.forEach((r) => {
+            const count = linkedServicesMap.get(getIDValue.Services?.(r));
+            const newCount = count ? count + 1 : 1;
+            linkedServicesMap.set(getIDValue.Services?.(r), newCount);
+          });
+          linkedServicesMap.forEach((count, id) => {
+            const newCount = servicesMap.get(id);
+            if (newCount) {
+              const diffCount = count - newCount;
+              if (diffCount > 0) {
+                servicesToUnLinkMap.set(id, diffCount);
+              }
+            } else {
+              servicesToUnLinkMap.set(id, count);
+            }
+          });
+          servicesMap.forEach((count, id) => {
+            const originalCount = linkedServicesMap.get(id);
+            if (originalCount) {
+              const diffCount = count - originalCount;
+              if (diffCount > 0) {
+                servicesToLinkMap.set(id, diffCount);
+              }
+            } else {
+              servicesToLinkMap.set(id, count);
+            }
+          });
+          servicesToUnLinkMap.forEach(async (count, id) => {
+            const recordKeys = JSON.parse(id);
+            const orderServiceRecords = (
+              await API.graphql({
+                query: listOrderServices.replaceAll("__typename", ""),
+                variables: {
+                  filter: {
+                    and: [
+                      { serviceId: { eq: recordKeys.id } },
+                      { orderId: { eq: orderRecord.id } },
+                    ],
+                  },
+                },
+              })
+            )?.data?.listOrderServices?.items;
+            for (let i = 0; i < count; i++) {
+              promises.push(
+                API.graphql({
+                  query: deleteOrderService.replaceAll("__typename", ""),
+                  variables: {
+                    input: {
+                      id: orderServiceRecords[i].id,
+                    },
+                  },
+                })
+              );
+            }
+          });
+          servicesToLinkMap.forEach((count, id) => {
+            const serviceToLink = serviceRecords.find((r) =>
+              Object.entries(JSON.parse(id)).every(
+                ([key, value]) => r[key] === value
+              )
+            );
+            for (let i = count; i > 0; i--) {
+              promises.push(
+                API.graphql({
+                  query: createOrderService.replaceAll("__typename", ""),
+                  variables: {
+                    input: {
+                      orderId: orderRecord.id,
+                      serviceId: serviceToLink.id,
+                    },
+                  },
+                })
+              );
+            }
+          });
+          const modelFieldsToSave = {
+            intakeDate: modelFields.intakeDate,
+            pickupDate: modelFields.pickupDate ?? null,
+            completed: modelFields.completed,
+            customerID: modelFields.customerID,
+            deviceID: modelFields.deviceID,
+            teamID: modelFields.teamID ?? null,
+            status: modelFields.status ?? null,
+          };
+          promises.push(
+            API.graphql({
+              query: updateOrder.replaceAll("__typename", ""),
+              variables: {
+                input: {
+                  id: orderRecord.id,
+                  ...modelFieldsToSave,
+                },
+              },
+            })
+          );
+          await Promise.all(promises);
           if (onSuccess) {
             onSuccess(modelFields);
           }
@@ -464,36 +756,6 @@ export default function OrderUpdateForm(props) {
       {...rest}
     >
       <TextField
-        label="Order number"
-        isRequired={true}
-        isReadOnly={false}
-        value={orderNumber}
-        onChange={(e) => {
-          let { value } = e.target;
-          if (onChange) {
-            const modelFields = {
-              orderNumber: value,
-              intakeDate,
-              status,
-              completed,
-              customerID,
-              deviceID,
-              teamID,
-            };
-            const result = onChange(modelFields);
-            value = result?.orderNumber ?? value;
-          }
-          if (errors.orderNumber?.hasError) {
-            runValidationTasks("orderNumber", value);
-          }
-          setOrderNumber(value);
-        }}
-        onBlur={() => runValidationTasks("orderNumber", orderNumber)}
-        errorMessage={errors.orderNumber?.errorMessage}
-        hasError={errors.orderNumber?.hasError}
-        {...getOverrideProps(overrides, "orderNumber")}
-      ></TextField>
-      <TextField
         label="Intake date"
         isRequired={true}
         isReadOnly={false}
@@ -504,13 +766,15 @@ export default function OrderUpdateForm(props) {
             e.target.value === "" ? "" : new Date(e.target.value).toISOString();
           if (onChange) {
             const modelFields = {
-              orderNumber,
               intakeDate: value,
-              status,
+              pickupDate,
               completed,
               customerID,
               deviceID,
               teamID,
+              Notes,
+              Services,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.intakeDate ?? value;
@@ -526,34 +790,38 @@ export default function OrderUpdateForm(props) {
         {...getOverrideProps(overrides, "intakeDate")}
       ></TextField>
       <TextField
-        label="Status"
+        label="Pickup date"
         isRequired={false}
         isReadOnly={false}
-        value={status}
+        type="datetime-local"
+        value={pickupDate && convertToLocal(new Date(pickupDate))}
         onChange={(e) => {
-          let { value } = e.target;
+          let value =
+            e.target.value === "" ? "" : new Date(e.target.value).toISOString();
           if (onChange) {
             const modelFields = {
-              orderNumber,
               intakeDate,
-              status: value,
+              pickupDate: value,
               completed,
               customerID,
               deviceID,
               teamID,
+              Notes,
+              Services,
+              status,
             };
             const result = onChange(modelFields);
-            value = result?.status ?? value;
+            value = result?.pickupDate ?? value;
           }
-          if (errors.status?.hasError) {
-            runValidationTasks("status", value);
+          if (errors.pickupDate?.hasError) {
+            runValidationTasks("pickupDate", value);
           }
-          setStatus(value);
+          setPickupDate(value);
         }}
-        onBlur={() => runValidationTasks("status", status)}
-        errorMessage={errors.status?.errorMessage}
-        hasError={errors.status?.hasError}
-        {...getOverrideProps(overrides, "status")}
+        onBlur={() => runValidationTasks("pickupDate", pickupDate)}
+        errorMessage={errors.pickupDate?.errorMessage}
+        hasError={errors.pickupDate?.hasError}
+        {...getOverrideProps(overrides, "pickupDate")}
       ></TextField>
       <SwitchField
         label="Completed"
@@ -564,13 +832,15 @@ export default function OrderUpdateForm(props) {
           let value = e.target.checked;
           if (onChange) {
             const modelFields = {
-              orderNumber,
               intakeDate,
-              status,
+              pickupDate,
               completed: value,
               customerID,
               deviceID,
               teamID,
+              Notes,
+              Services,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.completed ?? value;
@@ -591,13 +861,15 @@ export default function OrderUpdateForm(props) {
           let value = items[0];
           if (onChange) {
             const modelFields = {
-              orderNumber,
               intakeDate,
-              status,
+              pickupDate,
               completed,
               customerID: value,
               deviceID,
               teamID,
+              Notes,
+              Services,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.customerID ?? value;
@@ -689,13 +961,15 @@ export default function OrderUpdateForm(props) {
           let value = items[0];
           if (onChange) {
             const modelFields = {
-              orderNumber,
               intakeDate,
-              status,
+              pickupDate,
               completed,
               customerID,
               deviceID: value,
               teamID,
+              Notes,
+              Services,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.deviceID ?? value;
@@ -788,13 +1062,15 @@ export default function OrderUpdateForm(props) {
           let { value } = e.target;
           if (onChange) {
             const modelFields = {
-              orderNumber,
               intakeDate,
-              status,
+              pickupDate,
               completed,
               customerID,
               deviceID,
               teamID: value,
+              Notes,
+              Services,
+              status,
             };
             const result = onChange(modelFields);
             value = result?.teamID ?? value;
@@ -808,6 +1084,206 @@ export default function OrderUpdateForm(props) {
         errorMessage={errors.teamID?.errorMessage}
         hasError={errors.teamID?.hasError}
         {...getOverrideProps(overrides, "teamID")}
+      ></TextField>
+      <ArrayField
+        onChange={async (items) => {
+          let values = items;
+          if (onChange) {
+            const modelFields = {
+              intakeDate,
+              pickupDate,
+              completed,
+              customerID,
+              deviceID,
+              teamID,
+              Notes: values,
+              Services,
+              status,
+            };
+            const result = onChange(modelFields);
+            values = result?.Notes ?? values;
+          }
+          setNotes(values);
+          setCurrentNotesValue(undefined);
+          setCurrentNotesDisplayValue("");
+        }}
+        currentFieldValue={currentNotesValue}
+        label={"Notes"}
+        items={Notes}
+        hasError={errors?.Notes?.hasError}
+        runValidationTasks={async () =>
+          await runValidationTasks("Notes", currentNotesValue)
+        }
+        errorMessage={errors?.Notes?.errorMessage}
+        getBadgeText={getDisplayValue.Notes}
+        setFieldValue={(model) => {
+          setCurrentNotesDisplayValue(
+            model ? getDisplayValue.Notes(model) : ""
+          );
+          setCurrentNotesValue(model);
+        }}
+        inputFieldRef={NotesRef}
+        defaultFieldValue={""}
+      >
+        <Autocomplete
+          label="Notes"
+          isRequired={false}
+          isReadOnly={false}
+          placeholder="Search Note"
+          value={currentNotesDisplayValue}
+          options={NotesRecords.filter(
+            (r) => !NotesIdSet.has(getIDValue.Notes?.(r))
+          ).map((r) => ({
+            id: getIDValue.Notes?.(r),
+            label: getDisplayValue.Notes?.(r),
+          }))}
+          isLoading={NotesLoading}
+          onSelect={({ id, label }) => {
+            setCurrentNotesValue(
+              NotesRecords.find((r) =>
+                Object.entries(JSON.parse(id)).every(
+                  ([key, value]) => r[key] === value
+                )
+              )
+            );
+            setCurrentNotesDisplayValue(label);
+            runValidationTasks("Notes", label);
+          }}
+          onClear={() => {
+            setCurrentNotesDisplayValue("");
+          }}
+          onChange={(e) => {
+            let { value } = e.target;
+            fetchNotesRecords(value);
+            if (errors.Notes?.hasError) {
+              runValidationTasks("Notes", value);
+            }
+            setCurrentNotesDisplayValue(value);
+            setCurrentNotesValue(undefined);
+          }}
+          onBlur={() => runValidationTasks("Notes", currentNotesDisplayValue)}
+          errorMessage={errors.Notes?.errorMessage}
+          hasError={errors.Notes?.hasError}
+          ref={NotesRef}
+          labelHidden={true}
+          {...getOverrideProps(overrides, "Notes")}
+        ></Autocomplete>
+      </ArrayField>
+      <ArrayField
+        onChange={async (items) => {
+          let values = items;
+          if (onChange) {
+            const modelFields = {
+              intakeDate,
+              pickupDate,
+              completed,
+              customerID,
+              deviceID,
+              teamID,
+              Notes,
+              Services: values,
+              status,
+            };
+            const result = onChange(modelFields);
+            values = result?.Services ?? values;
+          }
+          setServices(values);
+          setCurrentServicesValue(undefined);
+          setCurrentServicesDisplayValue("");
+        }}
+        currentFieldValue={currentServicesValue}
+        label={"Services"}
+        items={Services}
+        hasError={errors?.Services?.hasError}
+        runValidationTasks={async () =>
+          await runValidationTasks("Services", currentServicesValue)
+        }
+        errorMessage={errors?.Services?.errorMessage}
+        getBadgeText={getDisplayValue.Services}
+        setFieldValue={(model) => {
+          setCurrentServicesDisplayValue(
+            model ? getDisplayValue.Services(model) : ""
+          );
+          setCurrentServicesValue(model);
+        }}
+        inputFieldRef={ServicesRef}
+        defaultFieldValue={""}
+      >
+        <Autocomplete
+          label="Services"
+          isRequired={false}
+          isReadOnly={false}
+          placeholder="Search Service"
+          value={currentServicesDisplayValue}
+          options={ServicesRecords.map((r) => ({
+            id: getIDValue.Services?.(r),
+            label: getDisplayValue.Services?.(r),
+          }))}
+          isLoading={ServicesLoading}
+          onSelect={({ id, label }) => {
+            setCurrentServicesValue(
+              ServicesRecords.find((r) =>
+                Object.entries(JSON.parse(id)).every(
+                  ([key, value]) => r[key] === value
+                )
+              )
+            );
+            setCurrentServicesDisplayValue(label);
+            runValidationTasks("Services", label);
+          }}
+          onClear={() => {
+            setCurrentServicesDisplayValue("");
+          }}
+          onChange={(e) => {
+            let { value } = e.target;
+            fetchServicesRecords(value);
+            if (errors.Services?.hasError) {
+              runValidationTasks("Services", value);
+            }
+            setCurrentServicesDisplayValue(value);
+            setCurrentServicesValue(undefined);
+          }}
+          onBlur={() =>
+            runValidationTasks("Services", currentServicesDisplayValue)
+          }
+          errorMessage={errors.Services?.errorMessage}
+          hasError={errors.Services?.hasError}
+          ref={ServicesRef}
+          labelHidden={true}
+          {...getOverrideProps(overrides, "Services")}
+        ></Autocomplete>
+      </ArrayField>
+      <TextField
+        label="Status"
+        isRequired={false}
+        isReadOnly={false}
+        value={status}
+        onChange={(e) => {
+          let { value } = e.target;
+          if (onChange) {
+            const modelFields = {
+              intakeDate,
+              pickupDate,
+              completed,
+              customerID,
+              deviceID,
+              teamID,
+              Notes,
+              Services,
+              status: value,
+            };
+            const result = onChange(modelFields);
+            value = result?.status ?? value;
+          }
+          if (errors.status?.hasError) {
+            runValidationTasks("status", value);
+          }
+          setStatus(value);
+        }}
+        onBlur={() => runValidationTasks("status", status)}
+        errorMessage={errors.status?.errorMessage}
+        hasError={errors.status?.hasError}
+        {...getOverrideProps(overrides, "status")}
       ></TextField>
       <Flex
         justifyContent="space-between"

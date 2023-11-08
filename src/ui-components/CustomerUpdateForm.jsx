@@ -286,8 +286,8 @@ export default function CustomerUpdateForm(props) {
       : getIDValue.Devices?.(Devices)
   );
   const getDisplayValue = {
-    Orders: (r) => `${r?.orderNumber ? r?.orderNumber + " - " : ""}${r?.id}`,
-    Devices: (r) => `${r?.orderNumber ? r?.orderNumber + " - " : ""}${r?.id}`,
+    Orders: (r) => `${r?.completed ? r?.completed + " - " : ""}${r?.id}`,
+    Devices: (r) => `${r?.completed ? r?.completed + " - " : ""}${r?.id}`,
   };
   const validations = {
     first: [{ type: "Required" }],
@@ -323,10 +323,7 @@ export default function CustomerUpdateForm(props) {
       const variables = {
         limit: autocompleteLength * 5,
         filter: {
-          or: [
-            { orderNumber: { contains: value } },
-            { id: { contains: value } },
-          ],
+          or: [{ completed: { contains: value } }, { id: { contains: value } }],
         },
       };
       if (newNext) {
@@ -355,10 +352,7 @@ export default function CustomerUpdateForm(props) {
       const variables = {
         limit: autocompleteLength * 5,
         filter: {
-          or: [
-            { orderNumber: { contains: value } },
-            { id: { contains: value } },
-          ],
+          or: [{ completed: { contains: value } }, { id: { contains: value } }],
         },
       };
       if (newNext) {

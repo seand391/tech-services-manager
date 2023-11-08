@@ -6,7 +6,7 @@
 
 import * as React from "react";
 import { AutocompleteProps, GridProps, SwitchFieldProps, TextFieldProps } from "@aws-amplify/ui-react";
-import { Order } from "../API.ts";
+import { Note, Order, Service } from "../API.ts";
 export declare type EscapeHatchProps = {
     [elementHierarchy: string]: Record<string, unknown>;
 } | null;
@@ -23,33 +23,39 @@ export declare type ValidationResponse = {
 };
 export declare type ValidationFunction<T> = (value: T, validationResponse: ValidationResponse) => ValidationResponse | Promise<ValidationResponse>;
 export declare type OrderUpdateFormInputValues = {
-    orderNumber?: string;
     intakeDate?: string;
-    status?: string;
+    pickupDate?: string;
     completed?: boolean;
     customerID?: string;
     deviceID?: string;
     teamID?: string;
+    Notes?: Note[];
+    Services?: Service[];
+    status?: string;
 };
 export declare type OrderUpdateFormValidationValues = {
-    orderNumber?: ValidationFunction<string>;
     intakeDate?: ValidationFunction<string>;
-    status?: ValidationFunction<string>;
+    pickupDate?: ValidationFunction<string>;
     completed?: ValidationFunction<boolean>;
     customerID?: ValidationFunction<string>;
     deviceID?: ValidationFunction<string>;
     teamID?: ValidationFunction<string>;
+    Notes?: ValidationFunction<Note>;
+    Services?: ValidationFunction<Service>;
+    status?: ValidationFunction<string>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type OrderUpdateFormOverridesProps = {
     OrderUpdateFormGrid?: PrimitiveOverrideProps<GridProps>;
-    orderNumber?: PrimitiveOverrideProps<TextFieldProps>;
     intakeDate?: PrimitiveOverrideProps<TextFieldProps>;
-    status?: PrimitiveOverrideProps<TextFieldProps>;
+    pickupDate?: PrimitiveOverrideProps<TextFieldProps>;
     completed?: PrimitiveOverrideProps<SwitchFieldProps>;
     customerID?: PrimitiveOverrideProps<AutocompleteProps>;
     deviceID?: PrimitiveOverrideProps<AutocompleteProps>;
     teamID?: PrimitiveOverrideProps<TextFieldProps>;
+    Notes?: PrimitiveOverrideProps<AutocompleteProps>;
+    Services?: PrimitiveOverrideProps<AutocompleteProps>;
+    status?: PrimitiveOverrideProps<TextFieldProps>;
 } & EscapeHatchProps;
 export declare type OrderUpdateFormProps = React.PropsWithChildren<{
     overrides?: OrderUpdateFormOverridesProps | undefined | null;

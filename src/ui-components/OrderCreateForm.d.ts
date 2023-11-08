@@ -5,7 +5,8 @@
  **************************************************************************/
 
 import * as React from "react";
-import { AutocompleteProps, GridProps, TextFieldProps } from "@aws-amplify/ui-react";
+import { AutocompleteProps, GridProps } from "@aws-amplify/ui-react";
+import { Service } from "../API.ts";
 export declare type EscapeHatchProps = {
     [elementHierarchy: string]: Record<string, unknown>;
 } | null;
@@ -22,21 +23,21 @@ export declare type ValidationResponse = {
 };
 export declare type ValidationFunction<T> = (value: T, validationResponse: ValidationResponse) => ValidationResponse | Promise<ValidationResponse>;
 export declare type OrderCreateFormInputValues = {
-    orderNumber?: string;
     customerID?: string;
     deviceID?: string;
+    Services?: Service[];
 };
 export declare type OrderCreateFormValidationValues = {
-    orderNumber?: ValidationFunction<string>;
     customerID?: ValidationFunction<string>;
     deviceID?: ValidationFunction<string>;
+    Services?: ValidationFunction<Service>;
 };
 export declare type PrimitiveOverrideProps<T> = Partial<T> & React.DOMAttributes<HTMLDivElement>;
 export declare type OrderCreateFormOverridesProps = {
     OrderCreateFormGrid?: PrimitiveOverrideProps<GridProps>;
-    orderNumber?: PrimitiveOverrideProps<TextFieldProps>;
     customerID?: PrimitiveOverrideProps<AutocompleteProps>;
     deviceID?: PrimitiveOverrideProps<AutocompleteProps>;
+    Services?: PrimitiveOverrideProps<AutocompleteProps>;
 } & EscapeHatchProps;
 export declare type OrderCreateFormProps = React.PropsWithChildren<{
     overrides?: OrderCreateFormOverridesProps | undefined | null;
