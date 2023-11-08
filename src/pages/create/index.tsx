@@ -1,5 +1,5 @@
 import DeviceCreateForm from "@/ui-components/DeviceCreateForm";
-import OrderCreateForm from "@/ui-components/OrderCreateForm";
+import OrderCreateForm from "@/components/OrderCreateForm";
 import { Heading, Button, Flex } from "@aws-amplify/ui-react";
 import { useRouter } from "next/router";
 

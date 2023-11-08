@@ -18,10 +18,15 @@ import {
   Text,
   useTheme,
 } from "@aws-amplify/ui-react";
-import { fetchByPath, getOverrideProps, validateField } from "./utils";
+import {
+  fetchByPath,
+  getOverrideProps,
+  validateField,
+} from "../ui-components/utils";
 import { API } from "aws-amplify";
 import { listCustomers, listDevices, listServices } from "../graphql/queries";
 import { createOrder, createOrderService } from "../graphql/mutations";
+import { currentUserSub } from "../pages/api/helpers";
 function ArrayField({
   items = [],
   onChange,
@@ -79,7 +84,7 @@ function ArrayField({
   const arraySection = (
     <React.Fragment>
       {!!items?.length && (
-        <ScrollView height="inherit" width="inherit" maxHeight={"7rem"}>
+        <ScrollView height="inherit" maxHeight={"7rem"}>
           {items.map((value, index) => {
             return (
               <Badge
@@ -418,6 +423,9 @@ export default function OrderCreateForm(props) {
               variables: {
                 input: {
                   ...modelFieldsToSave,
+                  completed: false,
+                  intakeDate: new Date().toISOString(),
+                  teamID: await currentUserSub(),
                 },
               },
             })

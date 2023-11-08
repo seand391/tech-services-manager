@@ -28,6 +28,5 @@ export async function updateCustomerTeam(customerFields: CustomerCreateFormInput
             }
         }
     });
-    console.log("luna arf");
     callbackFunc();
 }
